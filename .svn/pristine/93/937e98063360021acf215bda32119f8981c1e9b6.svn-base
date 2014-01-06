@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" 
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp"
+
+    >
+    <!--     android:background="#f6f6f6" -->
+    
+       <com.gfan.utils.MyListView
+        android:id="@+id/my_list"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:cacheColorHint="#00000000"
+        android:dividerHeight="1dp"
+        android:fadeScrollbars="true"
+        android:fadingEdge="none"
+        android:fastScrollEnabled="true" >
+    </com.gfan.utils.MyListView>
+
+       <View 
+           android:id="@+id/re_devider"
+           android:layout_width="fill_parent"
+           android:layout_height="2dp"
+           android:background="@color/link_color"
+           android:paddingLeft="5dp"
+           android:paddingRight="5dp"
+           android:visibility="gone"
+           />
+    <LinearLayout 
+        android:id="@+id/quick_reply"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        >
+
+       <EditText 
+           android:id="@+id/quick_reply_txt"
+           android:layout_width="0dp"
+           android:layout_height="wrap_content"
+           android:layout_weight="1"
+           android:paddingRight="5dp"
+           android:maxLines="3"
+           android:hint="快速回复"
+           />
+        <ImageView 
+           android:id="@+id/quick_reply_btn"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:src="@drawable/ic_menu_send_holo_light_inverse"
+           android:layout_gravity="bottom"
+           android:contentDescription="回复"
+           />
+    </LinearLayout>
+
+</LinearLayout>

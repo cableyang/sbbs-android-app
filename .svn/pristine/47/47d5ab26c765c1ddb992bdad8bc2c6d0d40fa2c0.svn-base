@@ -1,0 +1,368 @@
+package com.yuchao.ui;
+
+import java.io.IOException;
+import java.util.List;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.gfan.sbbs.MyApplication;
+import com.gfan.task2.TaskResult;
+import com.gfan.ui.Adapter.FavAdapter;
+import com.laohuai.appdemo.customui.ui.MyListView;
+import com.yuchao.domain.Board;
+import com.yuchao.task.GenericTask;
+import com.yuchao.task.TaskAdapter;
+import com.yuchao.task.TaskListener;
+import com.yuchao.util.SBBSCrawer;
+import com.yuchao.util.SBBSSupport;
+
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class FavActivity extends BaseActivity {
+	private MyListView favView;
+	// subFavList用来记录目录版面列表
+	private List<Board> favList;
+	private FavAdapter myAdapter;
+	private GenericTask mMarkRead, doRetrieveTask;
+	private boolean isLoad = false;
+	private int step = 0;
+	private String url;
+	private TextView title;
+	private ImageView backBtn;
+
+	private int nowTab;
+	private static final int FAV_TAB = 0;
+	private static final int SEARCH_TAB = 1;
+
+	private static final int MARKREAD = Menu.FIRST;
+	private TaskListener mMarkReadTaskListener = new TaskAdapter() {
+
+		@Override
+		public String getName() {
+			return "mMarkReadTaskListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			if (TaskResult.IO_ERROR == result) {
+				Toast.makeText(MyApplication.mContext, "网络错误", 1).show();
+			} else if (TaskResult.Failed == result) {
+				Toast.makeText(MyApplication.mContext, "设置失败", 1).show();
+			} else {
+				Toast.makeText(MyApplication.mContext, "设置成功", 1).show();
+				((MarkReadTask)task).getBoard().setHasUnread(false);
+			}
+			draw();
+		}
+	};
+
+	private TaskListener mRetrieveListener = new TaskAdapter() {
+		private ProgressDialog pdialog;
+
+		@Override
+		public String getName() {
+			return "mRetrieveListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			if (!isLoad) {
+				pdialog = new ProgressDialog(FavActivity.this);
+				LinearLayout pdialogView = (LinearLayout) getLayoutInflater().inflate(R.layout.pdialog, null);
+				pdialog.show();
+				pdialog.getWindow().setContentView(pdialogView);
+			}
+			super.onPreExecute(task);
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			isLoad = true;
+			if (null != pdialog) {
+				pdialog.dismiss();
+			}
+			favView.onRefreshComplete();
+			if (TaskResult.IO_ERROR == result) {
+				Toast.makeText(MyApplication.mContext, "加载失败", 1).show();
+			} else if (TaskResult.OK == result) {
+				draw();
+				goTop();
+			} else if (TaskResult.NO_DATA == result) {
+				Toast.makeText(MyApplication.mContext, "您的收藏夹为空", 1).show();
+			}
+		}
+
+	};
+
+	@Override
+	protected boolean _onCreate(Bundle bundle) {
+		if (super._onCreate(bundle)) {
+			LayoutInflater inflater = getLayoutInflater();
+			LinearLayout favLayout = (LinearLayout) inflater.inflate(
+					R.layout.list_with_header, null);
+			this.setContentView(favLayout);
+			initView();
+			// 为搜索页做准备
+			Bundle getbundle = getIntent().getExtras();
+			String token = MyApplication.getToken();
+			if (null != getbundle) {
+				nowTab = getbundle.getInt("nowTab");
+				url = getbundle.getString("url").concat("&token=" + token);
+			} else {
+				nowTab = FAV_TAB;
+				url = "http://bbs.seu.edu.cn/api/fav/get.json?token=" + token;
+			}
+
+			if (FAV_TAB == nowTab) {
+				title.setText("收藏夹");
+			} else if (SEARCH_TAB == nowTab) {
+				title.setText("搜索版面");
+			}
+			registerForContextMenu(favView);
+			refresh();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private void initView() {
+		favView = (MyListView) this.findViewById(R.id.list_with_header);
+		myAdapter = new FavAdapter(this);
+		favView.setAdapter(myAdapter);
+		title = (TextView) this.findViewById(R.id.new_header_txt);
+		backBtn = (ImageView) this.findViewById(R.id.back_btn);
+		backBtn.setVisibility(View.VISIBLE);
+		backBtn.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				refresh();
+			}
+		});
+		TextView new_btn = (TextView) this.findViewById(R.id.new_btn);
+		new_btn.setVisibility(TextView.INVISIBLE);
+		favView.setonRefreshListener(new MyListView.OnRefreshListener() {
+
+			@Override
+			public void onRefresh() {
+				doRetrieve();
+			}
+		});
+		favView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1,
+					int position, long arg3) {
+				Board board = getContextItemBoard(position);
+				if (null == board) {
+					return;
+				}
+				if (board.isDirectory()) {
+					step++;
+					List<Board> childList = board.getChildBoards();
+					if (null == childList || childList.size() == 0) {
+						Toast.makeText(MyApplication.mContext, "空目录", 1).show();
+					} else {
+						updateAdapter(childList);
+						board.setHasUnread(false);
+					}
+				} else {
+					Intent intent = new Intent(FavActivity.this,
+							com.yuchao.ui.TopicList.class);
+					Bundle bundle = new Bundle();
+					boolean flag = application.isOne_topic();
+					int mode = 0;
+					if (flag) {
+						mode = 2;
+					}
+					bundle.putInt("mode", mode);
+					bundle.putString("boardID", board.getId());
+					bundle.putString("boardName", board.getTitle());
+					intent.putExtras(bundle);
+					startActivity(intent);
+					board.setHasUnread(false);
+					myAdapter.notifyDataSetChanged();
+				}
+			}
+		});
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+	}
+
+	/** 可能很多时候并不需要真正的刷新，故此处不强行加载，只做更新 **/
+	public void refresh() {
+		if (null == favList) {
+			doRetrieve();
+		} else {
+			draw();
+		}
+	}
+
+	private void doRetrieve() {
+		doRetrieveTask = new FavRetrieveTask();
+		doRetrieveTask.setListener(mRetrieveListener);
+		doRetrieveTask.execute(url);
+	}
+
+	public void updateAdapter(final List<Board> list) {
+		myAdapter.refresh(list);
+	}
+
+	private void draw() {
+		myAdapter.refresh(favList);
+	}
+
+	private void goTop() {
+		favView.setSelection(1);
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo lm = (AdapterContextMenuInfo) item.getMenuInfo();
+		switch (item.getItemId()) {
+		case MARKREAD: {
+			Board board = this.getContextItemBoard(lm.position);
+			if (null == board) {
+				return false;
+			}
+			// http://bbs.seu.edu.cn/api/board/Test/markread.json
+			markRead(board);
+		}
+		}
+		return super.onContextItemSelected(item);
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		menu.setHeaderTitle("操作");
+		menu.add(0, MARKREAD, 0, "标记为已读");
+		super.onCreateContextMenu(menu, v, menuInfo);
+	}
+
+	private void markRead(Board board) {
+		if (board.isDirectory()) {
+			List<Board> childList = board.getChildBoards();
+			for (int i = 0, len = childList.size(); i < len; i++) {
+				if (childList.get(i).isDirectory()) {
+					markRead(childList.get(i));
+				}
+			}
+		} else {
+			String url = "http://bbs.seu.edu.cn/api/board/" + board.getId()
+					+ "/markread.json?token=" + MyApplication.getToken();
+			mMarkRead = new MarkReadTask(board);
+			mMarkRead.setListener(mMarkReadTaskListener);
+			mMarkRead.execute(url);
+		}
+	}
+
+	protected Board getContextItemBoard(int position) {
+		// 应分清楚区别，myAdapter返回的才是真正的版面列表数目，favList包括了header和footer
+		if (position >= 1 && position <= myAdapter.getCount()) {
+			return (Board) myAdapter.getItem(position - 1);
+		} else {
+			return null;
+		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (doRetrieveTask != null && !doRetrieveTask.isCancelled()) {
+			doRetrieveTask.cancel(true);
+		}
+		if (mMarkRead != null && !mMarkRead.isCancelled()) {
+			mMarkRead.cancel(true);
+		}
+		super.onDestroy();
+	}
+
+	private class MarkReadTask extends GenericTask {
+		private Board board;
+
+		MarkReadTask(Board board) {
+			this.setBoard(board);
+		}
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			String content = "";
+			JSONObject object = null;
+			try {
+				content = SBBSCrawer.getUrlContent(params[0]);
+				Log.i("FavActivity", content);
+				object = new JSONObject(content);
+				if (object.getInt("result") == 0) {
+					return TaskResult.OK;
+				} else {
+					return TaskResult.Failed;
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			}
+
+		}
+
+		public void setBoard(Board board) {
+			this.board = board;
+		}
+
+		public Board getBoard() {
+			return board;
+		}
+
+	}
+
+	private class FavRetrieveTask extends GenericTask {
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			try {
+				favList = SBBSSupport.getFavListAPI(params[0]);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			}
+			if (null == favList || favList.size() == 0) {
+				return TaskResult.NO_DATA;
+			}
+			return TaskResult.OK;
+		}
+
+	}
+}

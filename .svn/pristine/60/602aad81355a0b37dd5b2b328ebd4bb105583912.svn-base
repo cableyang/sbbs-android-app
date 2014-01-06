@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#EEEEEE"
+    android:orientation="vertical" >
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fadingEdge="vertical" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+
+            <RelativeLayout 
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/loginbgstyle"
+                android:orientation="horizontal"
+                android:paddingTop="5dp" 
+                >
+            <TextView
+                android:id="@+id/mail_body_from"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#06C"
+                android:textSize="15sp"
+                android:layout_alignParentLeft="true"
+                />
+            <TextView 
+                android:id="@+id/mail_body_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#06C"
+                android:textSize="15sp"
+                android:layout_alignParentRight="true"
+                
+                />
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/mail_body_content"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:autoLink="all"
+                android:background="@drawable/dialog_box_2"
+                android:linksClickable="true"
+                android:textColor="@android:color/background_dark"
+                android:textColorLink="#0000FF"
+                android:textSize="18sp" />
+
+            <TextView 
+                android:id="@+id/mail_body_quoter"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#06C"
+                android:textSize="15sp"
+                android:paddingLeft="5dp"
+                />
+            <TextView
+                android:id="@+id/mail_body_quote"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="12sp"
+                android:textStyle="italic" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

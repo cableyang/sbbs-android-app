@@ -1,0 +1,332 @@
+package com.yuchao.ui;
+
+import java.net.URLEncoder;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
+import com.darvds.ribbonmenu.R;
+import com.darvds.ribbonmenu.RibbonMenuView;
+import com.darvds.ribbonmenu.iRibbonMenuCallback;
+import com.gfan.frament.FavFragment;
+import com.gfan.frament.FriendListFragment;
+import com.gfan.frament.HotFragment;
+import com.gfan.frament.MailListFrament;
+import com.gfan.sbbs.ActivityFragmentTargets;
+import com.gfan.sbbs.MyApplication;
+import com.gfan.sbbs.OnOpenActivityFragmentListener;
+import com.gfan.sbbs.Preferences;
+import com.gfan.service.SBBSService;
+import com.gfan.ui.Adapter.TabsAdapter;
+import com.gfan.ui.base.HomeViewModel;
+import com.umeng.analytics.MobclickAgent;
+import com.umeng.update.UmengDownloadListener;
+import com.umeng.update.UmengUpdateAgent;
+
+public class Home extends SherlockFragmentActivity implements
+		iRibbonMenuCallback, OnOpenActivityFragmentListener {
+	private LayoutInflater mInflater;
+	private ViewPager mHomePager;
+	private RibbonMenuView rbmView;
+	private TabsAdapter pagerAdapter;
+	private HomeViewModel mHomeViewModel;
+	private long exitTime;
+	private boolean menuShown = false, onSearch = false;
+	private static final int MENU_SEARCH = 100000;// assign it a big number, in
+													// case conflict with other
+
+	private static final String TAG = "HOMEACTIVITY";
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		setTheme(com.actionbarsherlock.R.style.Theme_Sherlock_Light);
+		super.onCreate(savedInstanceState);
+		this.setContentView(R.layout.ribbon_main);
+
+		MobclickAgent.onError(this);// error feedback
+		schedule();// background data check
+		createShortCut();
+		manageAppUpdate();
+
+		mInflater = LayoutInflater.from(this);
+
+		mHomeViewModel = ((MyApplication) getApplication()).getmHomeViewModel();
+		rbmView = (RibbonMenuView) findViewById(R.id.ribbonMenuView1);
+		rbmView.setMenuClickCallback(this);
+		rbmView.setMenuItems(R.menu.ribbon_menu);
+
+		getSupportActionBar().setHomeButtonEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		initPager();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		MobclickAgent.onResume(this);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
+	}
+
+	private void initPager() {
+		ActionBar actionBar = getSupportActionBar();
+		mHomePager = (ViewPager) this.findViewById(R.id.test_pager);
+		pagerAdapter = new TabsAdapter(this, mHomePager);
+		pagerAdapter
+				.addTab(actionBar.newTab(), HotFragment.class, "本站十大", null);
+		pagerAdapter.addTab(actionBar.newTab(), FavFragment.class, "收藏夹", null);
+		pagerAdapter
+				.addTab(actionBar.newTab(), MailListFrament.class, "", null);
+		pagerAdapter.addTab(actionBar.newTab(), FriendListFragment.class,
+				"在线好友", null);
+		pagerAdapter.finishInit();
+		//TODO
+		mHomePager.setOffscreenPageLimit(0);//no effect?why?
+		if (MyApplication.checkLogin()) {
+			mHomePager.setCurrentItem(1);
+			getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+//			getSupportActionBar().setDisplayShowHomeEnabled(false);
+			mHomeViewModel.setCurrentTab(ActivityFragmentTargets.TAB_FAV);
+		} else {
+			mHomeViewModel.setCurrentTab(ActivityFragmentTargets.TAB_HOT);
+		}
+
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add(Menu.NONE, MENU_SEARCH, Menu.NONE, "search")
+				.setIcon(R.drawable.ic_menu_search)
+				.setActionView(R.layout.collapsible_edittext)
+				.setShowAsAction(
+						MenuItem.SHOW_AS_ACTION_ALWAYS
+								| MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int id = item.getItemId();
+		if (id == android.R.id.home) {
+			rbmView.toggleMenu();
+
+			return true;
+
+		} else if (id == MENU_SEARCH) {
+			item.setActionView(R.layout.collapsible_edittext);
+			final EditText searchInput = (EditText) item.getActionView()
+					.findViewById(R.id.search_input);
+			item.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+
+				@Override
+				public boolean onMenuItemActionExpand(MenuItem item) {
+					searchInput.requestFocus();
+					onSearch = true;
+					int mode = WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
+					getWindow().setSoftInputMode(mode);
+					return true;
+				}
+
+				@Override
+				public boolean onMenuItemActionCollapse(MenuItem item) {
+					onSearch = false;
+					return true;
+				}
+			});
+			searchInput.setOnKeyListener(new View.OnKeyListener() {
+
+				@Override
+				public boolean onKey(View view, int keyCode, KeyEvent event) {
+					if (KeyEvent.KEYCODE_ENTER == keyCode
+							&& event.getAction() == KeyEvent.ACTION_DOWN) {
+						String input = searchInput.getText().toString();
+						doSearch(input);
+						onSearch = true;
+						return true;
+					}
+					return false;
+				}
+			});
+			return true;
+		} else {
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	protected void schedule() {
+		boolean isUpdateEnabled = MyApplication.mPreference.getBoolean(
+				com.gfan.sbbs.Preferences.CHECK_UPDATE, false);
+		boolean isLogined = MyApplication.checkLogin();
+		if (isUpdateEnabled && isLogined) {
+			SBBSService.schedule(this);
+		}
+	}
+
+	private void doSearch(String input) {
+		if (TextUtils.isEmpty(input.trim())) {
+			return;
+		}
+		input = URLEncoder.encode(input.trim());
+		Intent intent = new Intent();
+		intent.setClassName("com.yuchao.ui", "com.yuchao.ui.SearchResult");
+		Bundle bundle = new Bundle();
+		bundle.putString("keyword", input);
+		intent.putExtras(bundle);
+		startActivity(intent);
+	}
+
+	@Override
+	public void RibbonMenuItemClick(int position) {
+
+		int len = pagerAdapter.getCount();
+//		int len = mHomePager.getChildCount();
+		Log.i(TAG, "position is " + position + ",len is " + len);
+
+		if (position < len) {
+			mHomePager.setCurrentItem(position);
+			mHomeViewModel.setCurrentTab("00" + (position + 1));
+			// Log.i(TAG, "current tab is " + mHomeViewModel.getCurrentTab());
+		} else if (position == 8) {
+			mHomeViewModel.doLogout(this);
+			// Toast.makeText(this, "doLogout", Toast.LENGTH_SHORT).show();
+		} else {
+			String target = "00" + (position + 5);
+			this.onOpenActivityOrFragment(target, null);
+		}
+	}
+
+	@Override
+	public void onOpenActivityOrFragment(String target, Bundle bundle) {
+		Intent intent = new Intent();
+		if (target.equals(ActivityFragmentTargets.ON_TOPIC)) {
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.Reply");
+		}
+		if (target.equals(ActivityFragmentTargets.TOPICLIST)) {
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.TopicList");
+		}
+		if (target.equals(ActivityFragmentTargets.MAIL)) {
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.MailBody");
+		}
+		if (target.equals(ActivityFragmentTargets.USER)
+				|| target.equals(ActivityFragmentTargets.TAB_PROFILE)) {
+			intent.setClassName("com.yuchao.ui",
+					"com.yuchao.ui.ViewProfileActivity");
+		}
+		if (target.equals(ActivityFragmentTargets.TAB_NOTICE)) {
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.NoticeActivity");
+		}
+		if (target.equals(ActivityFragmentTargets.TAB_SETTINGS)) {
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.Preference");
+		}
+		if (target.equals(ActivityFragmentTargets.TAB_ABOUT)) {
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.About");
+		}
+		if(target.equals(ActivityFragmentTargets.NEW_MAIL)){
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.WriteMail");
+		}
+		if(target.equals(ActivityFragmentTargets.TAB_SECTIONS)){
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.Sections");
+		}
+		if (null != bundle) {
+			intent.putExtras(bundle);
+		}
+		startActivity(intent);
+	}
+
+	private void createShortCut() {
+		boolean firstRun = MyApplication.mPreference.getBoolean(
+				Preferences.FIRST_RUN, true);
+		if (!firstRun) {
+			return;
+		}
+		Intent intent = new Intent(
+				"com.android.launcher.action.INSTALL_SHORTCUT");// action
+		intent.putExtra(Intent.EXTRA_SHORTCUT_NAME,
+				getString(R.string.app_name));// 快捷方式名字
+		intent.putExtra("duplicate", false); // 是否重复创建快捷方式
+		Parcelable icon = Intent.ShortcutIconResource.fromContext(
+				getApplicationContext(), R.drawable.icon);
+		intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, icon);// icon
+		intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, new Intent(
+				getApplicationContext(), Logo.class)); // 启动界面
+		sendBroadcast(intent);// 发送广播
+		MyApplication.mPreference.edit()
+				.putBoolean(Preferences.FIRST_RUN, false).commit();
+	}
+
+	private void manageAppUpdate() {
+		MyApplication application = (MyApplication) getApplication();
+		if (application.isAutoUpdate()) {
+			long updateTime = ((long) application.getUpdateInterval()) * 1000
+					* 60 * 60 * 24;
+			UmengUpdateAgent.update(this, updateTime);
+			Log.i("MyApplication",
+					"update Interval is " + application.getUpdateInterval());
+		}
+		UmengUpdateAgent.setUpdateOnlyWifi(application.isUpdate_wifi());
+		UmengUpdateAgent.setOnDownloadListener(new UmengDownloadListener() {
+
+			@Override
+			public void OnDownloadEnd(int result) {
+				if (1 == result) {
+					Toast.makeText(Home.this, "下载完成", Toast.LENGTH_SHORT)
+							.show();
+				} else {
+					Toast.makeText(Home.this, "下载失败", Toast.LENGTH_SHORT)
+							.show();
+				}
+			}
+		});
+
+	}
+
+	@Override
+	public boolean dispatchKeyEvent(KeyEvent event) {
+		// 会触发ACTION_DOWN和ACTION_UP事件，这里仅捕获ACTIONDOWN即可
+		if (event.getKeyCode() == KeyEvent.KEYCODE_BACK
+				&& event.getAction() == KeyEvent.ACTION_DOWN) {
+			menuShown = rbmView.isMenuVisible();
+			if (onSearch){
+				onSearch = false;
+				return super.dispatchKeyEvent(event);
+			} else if(menuShown){
+				rbmView.toggleMenu();
+			}else
+				if (System.currentTimeMillis() - exitTime > 2000) {
+					Toast.makeText(this, R.string.exit_indicate,
+							Toast.LENGTH_SHORT).show();
+					exitTime = System.currentTimeMillis();
+				} else {
+					exit();
+				}
+				return true;
+			} 
+		return super.dispatchKeyEvent(event);
+	}
+
+	private void exit() {
+		android.os.Process.killProcess(android.os.Process.myPid());
+	}
+
+}

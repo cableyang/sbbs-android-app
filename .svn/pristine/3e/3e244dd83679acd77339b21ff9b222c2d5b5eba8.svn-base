@@ -1,0 +1,100 @@
+package com.gfan.ui.Adapter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+import com.yuchao.domain.Topic;
+import com.yuchao.ui.R;
+
+public class TopTenAdapter extends BaseAdapter {
+	private List<Topic> topList;
+	private Context context;
+	private LayoutInflater mInflater;
+
+	public TopTenAdapter(Context context) {
+		this.topList = new ArrayList<Topic>();
+		this.context = context;
+	}
+	
+	public TopTenAdapter(LayoutInflater mInflater){
+		this.topList = new ArrayList<Topic>();
+		this.mInflater = mInflater;
+	}
+
+	@Override
+	public int getCount() {
+		return topList.size();
+	}
+
+	@Override
+	public Object getItem(int position) {
+		return topList.get(position);
+	}
+
+	@Override
+	public long getItemId(int position) {
+		return position;
+	}
+
+	public void refresh(List<Topic> list) {
+		this.topList = list;
+		notifyDataSetChanged();
+	}
+
+	public void refresh() {
+		notifyDataSetChanged();
+	}
+
+	@Override
+	public View getView(int position, View convertView, ViewGroup parent) {
+		if (null == mInflater) {
+			mInflater = (LayoutInflater) context
+					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		}
+		// 设定这个条目的内容
+		ViewHolder holder = null;
+		if (convertView == null) {
+			holder = new ViewHolder();
+			convertView = mInflater.inflate(R.layout.listview_item_top_ten,
+					null);
+			holder.txt_author = (TextView) convertView
+					.findViewById(R.id.list_top_ten_textAuthor);
+			holder.txt_title = (TextView) convertView
+					.findViewById(R.id.list_top_ten_textTitle);
+			holder.txt_index = (TextView) convertView
+					.findViewById(R.id.list_top_ten_textIndex);
+			holder.txt_board = (TextView) convertView
+					.findViewById(R.id.list_top_ten_textBoard);
+			holder.readView = (TextView) convertView
+					.findViewById(R.id.list_top_ten_pop);
+			convertView.setTag(holder);
+		} else {
+			holder = (ViewHolder) convertView.getTag();
+		}
+
+		Topic topic = topList.get(position);
+		holder.txt_author.setText("作者: " + topic.getAuthor());
+		holder.txt_title.setText(topic.getTitle());
+		holder.txt_board.setText("版面:" + topic.getTalkSpace());
+		holder.txt_index.setText(position + 1 + "");
+		holder.readView.setText("(" + topic.getReplies() + "/"
+				+ topic.getPopularity() + ")");
+		return convertView;
+	}
+
+	// 定义静态类用于获取列表中每一个条目数据的更新
+	private static class ViewHolder {
+		TextView txt_index;
+		TextView txt_author;
+		TextView txt_title;
+		TextView txt_board;
+		TextView readView;
+	}
+}

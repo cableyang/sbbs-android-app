@@ -1,0 +1,28 @@
+package com.yuchao.util;
+
+import java.util.List;
+
+import com.yuchao.domain.Mail;
+
+public class MailUtility {
+	private String nextPage;
+	private List<Mail> mailList;
+	public MailUtility(String nextPage, List<Mail> mailList) {
+		super();
+		this.nextPage = nextPage;
+		this.mailList = mailList;
+	}
+	public String getNextPage() {
+		return nextPage;
+	}
+	public void setNextPage(String nextPage) {
+		this.nextPage = nextPage;
+	}
+	public List<Mail> getMailList() {
+		return mailList;
+	}
+	public void setMailList(List<Mail> mailList) {
+		this.mailList = mailList;
+	}
+	
+}

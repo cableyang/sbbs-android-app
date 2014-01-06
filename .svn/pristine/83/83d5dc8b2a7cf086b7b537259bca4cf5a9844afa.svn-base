@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="4dip" 
+        >
+
+        <TextView
+            android:id="@+id/list_top_ten_textIndex"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:paddingLeft="4dip"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp"
+            android:textStyle="bold" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/list_top_ten_textBoard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:paddingRight="8dip"
+            android:textColor="#06C"
+            android:textSize="12sp" >
+        </TextView>
+
+        <TextView
+            android:id="@+id/list_top_ten_textAuthor"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/list_top_ten_textBoard"
+            android:layout_toRightOf="@id/list_top_ten_textIndex"
+            android:gravity="left"
+            android:paddingLeft="8dip"
+            android:paddingRight="8dip"
+            android:textColor="#06C"
+            android:textSize="12sp" >
+        </TextView>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" 
+        android:paddingTop="2dp"
+        android:paddingBottom="3dp">
+
+        <TextView
+            android:id="@+id/list_top_ten_pop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:paddingLeft="5dp"
+            android:paddingRight="2dp"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/list_top_ten_textTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="20dip"
+            android:layout_toLeftOf="@id/list_top_ten_pop"
+            android:textColor="@android:color/background_dark"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
+</LinearLayout>

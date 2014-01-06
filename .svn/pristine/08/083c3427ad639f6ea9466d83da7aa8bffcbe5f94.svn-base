@@ -1,0 +1,27 @@
+package com.yuchao.util;
+
+import com.yuchao.domain.Topic;
+
+public class TopicAdapter {
+	private boolean success;
+	private String error;
+	public boolean isSuccess() {
+		return success;
+	}
+	public void setSuccess(boolean success) {
+		this.success = success;
+	}
+	public String getError() {
+		return error;
+	}
+	public void setError(String error) {
+		this.error = error;
+	}
+	public Topic getTopic() {
+		return topic;
+	}
+	public void setTopic(Topic topic) {
+		this.topic = topic;
+	}
+	private Topic topic;
+}

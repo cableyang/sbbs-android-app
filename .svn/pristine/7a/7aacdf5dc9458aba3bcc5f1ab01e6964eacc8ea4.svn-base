@@ -1,0 +1,817 @@
+package com.yuchao.util;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.util.Log;
+
+import com.gfan.sbbs.MyApplication;
+import com.gfan.task2.FailureException;
+import com.gfan.task2.LoginException;
+import com.gfan.task2.LoginResult;
+import com.gfan.task2.NoDataException;
+import com.yuchao.domain.Attachment;
+import com.yuchao.domain.Board;
+import com.yuchao.domain.Mail;
+import com.yuchao.domain.Topic;
+import com.yuchao.domain.User;
+
+public class SBBSSupport {
+	public static boolean isLogined = false;
+
+	/**
+	 * 获取好友列表
+	 * 
+	 * @param content
+	 * @return
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 * @throws JSONException
+	 * @throws LoginException
+	 */
+	public static UserListUtils getFriendList(String url)
+			throws ClientProtocolException, IOException, JSONException {
+		List<User> friendList = new ArrayList<User>();
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("Friends", content);
+		JSONObject object = new JSONObject(content);
+		UserListUtils friendUtils = new UserListUtils();
+		boolean success = object.getBoolean("success");
+		if (success) {
+			JSONArray friendArray = object.getJSONArray("friends");
+			for (int i = 0, len = friendArray.length(); i < len; i++) {
+				JSONObject userJson = friendArray.getJSONObject(i);
+				String userID = userJson.getString("id");
+				String userFrom = userJson.getString("from");
+				String nickName = userJson.getString("name");
+				String mode = userJson.getString("mode");
+				User user = new User();
+				user.setId(userID).setNickName(nickName).setSourceIP(userFrom)
+						.setStatus(mode);
+				friendList.add(user);
+			}
+			friendUtils.setUserList(friendList);
+		} else {
+			String error = object.getString("error");
+			friendUtils.setError(error);
+		}
+		friendUtils.setSuccess(success);
+		return friendUtils;
+	}
+
+	/**
+	 * 使用API获取十大话题
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static List<Topic> getTopicListApi(String url)
+			throws ClientProtocolException, IOException, JSONException {
+		List<Topic> topList = new ArrayList<Topic>();
+		Topic topic;
+		String content = SBBSCrawer.getUrlContent(url);
+		JSONObject object = new JSONObject(content);
+		boolean success = object.getBoolean("success");
+		if (success) {
+			JSONArray jsonArray = object.getJSONArray("topics");
+			for (int i = 0, len = jsonArray.length(); i < len; i++) {
+				JSONObject topicJson = jsonArray.getJSONObject(i);
+				topic = Topic.parseTopic(topicJson);
+				topList.add(topic);
+			}
+		}
+		return topList;
+	}
+
+	/**
+	 * 使用API获取帖子内容，单篇/同主题
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static BoardAdapter getThreadListAPI(String url, String[] blackList)
+			throws ClientProtocolException, IOException, JSONException {
+		List<Topic> threadList = new ArrayList<Topic>();
+		Topic topic;
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("SBBSSuport", content);
+		int count = 0;
+		JSONObject object = new JSONObject(content);
+		boolean success = object.getBoolean("success");
+		if (success) {
+			JSONArray threadArray = object.getJSONArray("topics");
+			count = threadArray.length();
+			for (int i = 0, len = threadArray.length(); i < len; i++) {
+				topic = new Topic();
+				JSONObject threadJson = threadArray.getJSONObject(i);
+				topic = Topic.parseTopic(threadJson);
+				if (StringUtils.contains(topic.getAuthor(), blackList)) {
+					continue;
+				}
+				threadList.add(topic);
+			}
+		}
+		return new BoardAdapter(count, threadList);
+	}
+
+	/**
+	 * process the attachment of the topic
+	 * 
+	 * @param url
+	 * @return
+	 * @throws JSONException
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public static List<Attachment> getAttachments(String url)
+			throws JSONException, ClientProtocolException, IOException {
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("SBBSSupport", url);
+		JSONObject obj = new JSONObject(content);
+		Log.i("SBBSSupport", content);
+		List<Attachment> attList = new ArrayList<Attachment>();
+		boolean success = obj.getBoolean("success");
+		Attachment att;
+		if (success) {
+			JSONArray attArray = obj.getJSONArray("attachments");
+			for (int i = 0, len = attArray.length(); i < len; i++) {
+				JSONObject attJson = attArray.getJSONObject(i);
+				att = Attachment.parseAtt(attJson);
+				attList.add(att);
+			}
+		}
+		return attList;
+	}
+
+	/**
+	 * 使用API获取邮件列表
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws FailureException
+	 */
+	public static List<Mail> getMailListAPI(String url)
+			throws ClientProtocolException, IOException, JSONException,
+			FailureException {
+		List<Mail> mailList = new ArrayList<Mail>();
+		Mail mail;
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("getMailListAPI", content);
+		JSONObject object = new JSONObject(content);
+		boolean result = object.getBoolean("success");
+		if (!result) {
+			throw new FailureException();
+		}
+		JSONArray mailArray = object.getJSONArray("mails");
+		for (int i = 0, len = mailArray.length(); i < len; i++) {
+			mail = new Mail();
+			JSONObject mailJson = mailArray.getJSONObject(i);
+			String num = mailJson.getString("id");
+			boolean unread = mailJson.getBoolean("unread");
+			String author = mailJson.getString("author");
+			long milliseconds = mailJson.getLong("time") * 1000;
+			Date date = new Date(milliseconds);
+			SimpleDateFormat format = new SimpleDateFormat(
+					"MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
+			String time = format.format(date);
+			String title = mailJson.getString("title");
+			mail.setDate(time);
+			mail.setFrom(author);
+			mail.setNum(num);
+			mail.setTitle(title);
+			mail.setUnRead(unread);
+			mailList.add(mail);
+		}
+		return mailList;
+	}
+
+	/**
+	 * 使用API获取邮件内容
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws FailureException
+	 */
+	public static Mail getMailContentAPI(String url)
+			throws ClientProtocolException, IOException, JSONException,
+			FailureException {
+		Mail mail = new Mail();
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("SBBSSuport", content);
+		JSONObject object = new JSONObject(content);
+		boolean result = object.getBoolean("success");
+		if (!result) {
+			throw new FailureException();
+		}
+		mail = Mail.parseJson(object.getJSONObject("mail"));
+		return mail;
+	}
+
+	/**
+	 * 删除邮件
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static boolean delMail(String url) throws ClientProtocolException,
+			IOException, JSONException {
+		String content = SBBSCrawer.getUrlContent(url);
+		JSONObject object = new JSONObject(content);
+		int result = object.getInt("result");
+		if (0 == result) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * 使用API获取收藏夹列表
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static List<Board> getFavListAPI(String url)
+			throws ClientProtocolException, IOException, JSONException {
+		List<Board> favList = new ArrayList<Board>();
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("SBBSSuport", content);
+		JSONArray favJson = new JSONObject(content).getJSONArray("boards");
+		favList = getBoard(favJson);
+		Comparator com = new Comparator() {
+			@Override
+			public int compare(Object obj0, Object obj1) {
+				if (obj0 == null || obj1 == null) {
+					return -1;
+				}
+				Board b1 = (Board) obj0;
+				Board b2 = (Board) obj1;
+				if (b1.isHasUnread() == true && b2.isHasUnread() == false) {
+					return -1;
+				} else if (b1.isHasUnread() == false
+						&& b2.isHasUnread() == true) {
+					return 1;
+				} else
+					return b1.getId().compareTo(b2.getId());
+			}
+		};
+		Collections.sort(favList, com);
+		return favList;
+	}
+
+	/**
+	 * 获取收藏夹版面辅助方法
+	 * 
+	 * @param array
+	 * @return
+	 * @throws JSONException
+	 */
+	private static List<Board> getBoard(JSONArray array) throws JSONException {
+		List<Board> favList = new ArrayList<Board>();
+		for (int i = 0, len = array.length(); i < len; i++) {
+			JSONObject boardJson = array.getJSONObject(i);
+			boolean isDirectory = false;
+			if (boardJson.has("leaf")) {
+				isDirectory = !boardJson.getBoolean("leaf");
+			}
+			List<Board> childList;
+			Board board = new Board();
+			if (isDirectory) {
+				board.setDirectory(true);
+				childList = getBoard(boardJson.getJSONArray("boards"));
+				board.setChildBoards(childList);
+				String name = boardJson.getString("name");
+				board.setId(name);
+			} else {
+				board.setDirectory(false);
+				String boardID = boardJson.getString("name");
+				String boardName = boardJson.getString("description");
+				String link = "http://bbs.seu.edu.cn/m?act=board&board="
+						+ boardID;
+				board.setUrl(link);
+				board.setId(boardID);
+				board.setTitle(boardName);
+			}
+			if (boardJson.has("unread")) {
+				boolean unread = boardJson.getBoolean("unread");
+				board.setHasUnread(unread);
+			}
+			favList.add(board);
+
+		}
+
+		return favList;
+	}
+
+	private static List<Board> getBoardWithoutDir(JSONArray array)
+			throws JSONException {
+		List<Board> favList = new ArrayList<Board>();
+		for (int i = 0, len = array.length(); i < len; i++) {
+			JSONObject boardJson = array.getJSONObject(i);
+			boolean isDirectory = false;
+			if (boardJson.has("leaf")) {
+				isDirectory = !boardJson.getBoolean("leaf");
+			}
+			List<Board> childList;
+			Board board = new Board();
+			if (isDirectory) {
+				board.setDirectory(true);
+				childList = getBoardWithoutDir(boardJson.getJSONArray("boards"));
+				board.setChildBoards(childList);
+				favList.addAll(childList);
+				String name = boardJson.getString("name");
+				board.setId(name);
+			} else {
+				board.setDirectory(false);
+				String boardID = boardJson.getString("name");
+				String boardName = boardJson.getString("description");
+				String link = "http://bbs.seu.edu.cn/m?act=board&board="
+						+ boardID;
+				board.setUrl(link);
+				board.setId(boardID);
+				board.setTitle(boardName);
+				favList.add(board);
+			}
+			if (boardJson.has("unread")) {
+				boolean unread = boardJson.getBoolean("unread");
+				board.setHasUnread(unread);
+			}
+		}
+
+		return favList;
+	}
+
+	/**
+	 * mark board as read
+	 */
+
+	public static boolean markBoardRead(String url) {
+		String content = null;
+		try {
+			content = SBBSCrawer.getUrlContent(url);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		try {
+			JSONObject obj = new JSONObject(content);
+
+			if (0 == obj.getInt("result")) {
+				return true;
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return false;
+	}
+
+	/**
+	 * 使用API搜索版面
+	 * 
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 * @throws ClientProtocolException
+	 * @throws JSONException
+	 * @throws FailureException
+	 */
+	public static List<Board> searchBoard(String url)
+			throws ClientProtocolException, IOException, JSONException,
+			FailureException {
+		List<Board> resultList = new ArrayList<Board>();
+		Board board;
+		String content = SBBSCrawer.getUrlContent(url);
+		JSONObject object = new JSONObject(content);
+		if (!object.getBoolean("success")) {
+			throw new FailureException();
+		}
+		JSONArray boardArray = object.getJSONArray("boards");
+		for (int i = 0, len = boardArray.length(); i < len; i++) {
+			JSONObject boardJson = boardArray.getJSONObject(i);
+			board = new Board();
+			String boardID = boardJson.getString("name");
+			String boardName = boardJson.getString("description");
+			board.setId(boardID);
+			board.setTitle(boardName);
+			resultList.add(board);
+		}
+		return resultList;
+
+	}
+
+	/**
+	 * 使用API加载版面帖子列表
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static BoardAdapter getBoardTopicListAPI(String url,
+			String[] blackList) throws ClientProtocolException, IOException,
+			JSONException {
+		List<Topic> topicList = new ArrayList<Topic>();
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("TopicList", content);
+		Log.i("TopicList", url);
+		BoardAdapter ba = new BoardAdapter();
+		JSONObject object = new JSONObject(content);
+		boolean success = object.getBoolean("success");
+		int count = 0;
+		if (success) {
+			JSONArray topicArray = object.getJSONArray("topics");
+			count = topicArray.length();
+			for (int i = 0, len = topicArray.length(); i < len; i++) {
+				JSONObject topicJson = topicArray.getJSONObject(i);
+				Topic topic = Topic.parseTopic(topicJson);
+				if (StringUtils.contains(topic.getAuthor(), blackList)) {
+					continue;
+				}
+				topicList.add(topic);
+			}
+			ba.setCount(count);
+			ba.setTopicList(topicList);
+		} else {
+			String error = object.getString("error");
+			ba.setError(error);
+		}
+		ba.setSuccess(success);
+		return ba;
+	}
+
+	/**
+	 * 使用API进行发文操作
+	 * 
+	 * @param params
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static TopicAdapter doPostAPI(String... params)
+			throws ClientProtocolException, IOException, JSONException {
+		TopicAdapter topicAdapter = new TopicAdapter();
+		boolean success = false;
+		String content = SBBSCrawer.doPostAPI(params);
+		Log.i("DOPOSTAPI", content);
+		JSONObject object = new JSONObject(content);
+		success = object.getBoolean("success");
+		if (success) {
+			JSONObject threadJson = object.getJSONObject("topic");
+			Topic topic = Topic.parseTopic(threadJson);
+			topicAdapter.setTopic(topic);
+		} else {
+			String error = object.getString("error");
+			topicAdapter.setError(error);
+		}
+		topicAdapter.setSuccess(success);
+
+		return topicAdapter;
+	}
+
+	/**
+	 * edit post TODO
+	 * 
+	 * @param params
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static TopicAdapter doPostEdit(String... params)
+			throws ClientProtocolException, IOException, JSONException {
+		TopicAdapter topicAdapter = new TopicAdapter();
+		boolean success = false;
+		String content = SBBSCrawer.doEdit(params);
+		Log.i("DOPOSTEDIT", content);
+		JSONObject object = new JSONObject(content);
+		success = object.getBoolean("success");
+		if (success) {
+			JSONObject threadJson = object.getJSONObject("topic");
+			Topic topic = Topic.parseTopic(threadJson);
+			topicAdapter.setTopic(topic);
+		} else {
+			String error = object.getString("error");
+			topicAdapter.setError(error);
+		}
+		topicAdapter.setSuccess(success);
+
+		return topicAdapter;
+	}
+
+	/**
+	 * 处理发信任务
+	 * 
+	 * @param reciever
+	 * @param box
+	 * @param num
+	 * @param post
+	 * @param title
+	 * @param content
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public static boolean doPostMail(String reciever, String title,
+			String content, String reid, String token)
+			throws ClientProtocolException, IOException {
+		title = URLEncoder.encode(title, "UTF-8");
+		content = URLEncoder.encode(content, "UTF-8");
+		String url = "http://bbs.seu.edu.cn/api/mail/send.json?user="
+				+ reciever + "&title=" + title + "&content=" + content
+				+ "&reid=" + reid + "&token=" + token;
+		String resultContent = SBBSCrawer.getUrlContent(url);
+		Log.i("PostMailTask", resultContent);
+		if (resultContent.contains("true")) {// 可能使用JSON处理会更好点 - -
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * 使用API获取用户资料
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static UserUtils getUserProfileAPI(String userID)
+			throws ClientProtocolException, IOException, JSONException {
+		String url = "http://bbs.seu.edu.cn/api/user/" + userID.trim()
+				+ ".json";
+		Log.i("getUserProfileAPI", url);
+		UserUtils userUtils = new UserUtils();
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("getUserProfileAPI", content);
+		JSONObject object = new JSONObject(content);
+		boolean success = object.getBoolean("success");
+		if (success) {
+			JSONObject userJson = object.getJSONObject("user");
+			User user = User.parseJson(userJson);
+			userUtils.setUser(user);
+		} else {
+			String error = object.getString("error");
+			userUtils.setError(error);
+		}
+		userUtils.setSuccess(success);
+		return userUtils;
+	}
+	/**
+	 * add or del friends
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+
+	public static boolean dealFriends(String url)
+			throws ClientProtocolException, IOException, JSONException {
+
+		String content = SBBSCrawer.getUrlContent(url);
+		JSONObject obj = new JSONObject(content);
+		return obj.getBoolean("success");
+	}
+
+	/**
+	 * 提醒内容
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws FailureException
+	 */
+	public static HashMap<String, Object> getNotifications(String url)
+			throws ClientProtocolException, IOException, JSONException,
+			FailureException {
+		HashMap<String, Object> noticeArray = new HashMap<String, Object>();
+		// List<Object> noticeList = new ArrayList<Object>();
+		List<Topic> atsArray = new ArrayList<Topic>();
+		List<Topic> reArray = new ArrayList<Topic>();
+		List<Mail> mailsArray = new ArrayList<Mail>();
+
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("NoticeActivity", content);
+		JSONObject object = new JSONObject(content);
+		boolean flag = object.getBoolean("success");
+		if (!flag) {
+			throw new FailureException();
+		}
+		if (!object.isNull("mails")) {
+			JSONArray mailArray = object.getJSONArray("mails");
+			for (int i = 0, len = mailArray.length(); i < len; i++) {
+				JSONObject mailJson = mailArray.getJSONObject(i);
+				Mail mail = new Mail();
+				String id = mailJson.getString("id");
+				String sender = mailJson.getString("sender");
+				String title = mailJson.getString("title");
+				mail.setFrom(sender);
+				mail.setNum(id);
+				mail.setTitle(title);
+				mailsArray.add(mail);
+			}
+		}
+		Log.i("NoticeActivity", "After the mails");
+		if (!object.isNull("ats")) {
+			JSONArray atArray = object.getJSONArray("ats");
+			for (int i = 0, len = atArray.length(); i < len; i++) {
+				Topic topic = new Topic();
+				JSONObject atJson = atArray.getJSONObject(i);
+				String board = atJson.getString("board");
+				int id = atJson.getInt("id");
+				String user = atJson.getString("user");
+				String title = atJson.getString("title");
+				topic.setAuthor(user).setId(id).setTalkSpace(board)
+						.setTitle(title);
+				atsArray.add(topic);
+			}
+		}
+		if (!object.isNull("replies")) {
+			JSONArray replyArray = object.getJSONArray("replies");
+			for (int i = 0, len = replyArray.length(); i < len; i++) {
+				Topic topic = new Topic();
+				JSONObject atJson = replyArray.getJSONObject(i);
+				String board = atJson.getString("board");
+				int id = atJson.getInt("id");
+				String user = atJson.getString("user");
+				String title = atJson.getString("title");
+				topic.setAuthor(user).setId(id).setTalkSpace(board)
+						.setTitle(title);
+				reArray.add(topic);
+			}
+		}
+		noticeArray.put("mail", mailsArray);
+		noticeArray.put("ats", atsArray);
+		noticeArray.put("reply", reArray);
+		// Log.i("NoticeActivity", "list size is" + noticeList.size());
+		return noticeArray;
+	}
+
+	/**
+	 * 清除所有提醒
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static boolean clearNotification(String url)
+			throws ClientProtocolException, IOException, JSONException {
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("clearNotification", content);
+		JSONObject object = new JSONObject(content);
+		return object.getBoolean("success");
+	}
+
+	/**
+	 * 使用API获取token
+	 * 
+	 * @param userID
+	 * @param passwd
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static LoginResult loginAPI(String userID, String passwd)
+			throws ClientProtocolException, IOException, JSONException {
+		String url = "http://bbs.seu.edu.cn/api/token.json?user=" + userID
+				+ "&pass=" + passwd;
+		String content = SBBSCrawer.getUrlContent(url);
+		Log.i("LoginActivity", content);
+		JSONObject object = new JSONObject(content);
+		LoginResult result = new LoginResult();
+		boolean success = object.getBoolean("success");
+		if (success) {
+			result.setUserID(object.getString("id"));
+			result.setNickName(object.getString("name"));
+			result.setToken(object.getString("token"));
+		} else {
+			result.setError(object.getString("error"));
+		}
+		result.setSuccess(success);
+		return result;
+	}
+
+	/**
+	 * 使用Post方法获取token
+	 * 
+	 * @param userID
+	 * @param passwd
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public static LoginResult doLogin(String userID, String passwd)
+			throws ClientProtocolException, IOException, JSONException {
+		String content = SBBSCrawer.doLogin(userID, passwd);
+		JSONObject object = new JSONObject(content);
+		LoginResult result = new LoginResult();
+		boolean success = object.getBoolean("success");
+		if (success) {
+			result.setUserID(object.getString("id"));
+			result.setNickName(object.getString("name"));
+			result.setToken(object.getString("token"));
+		} else {
+			result.setError(object.getString("error"));
+		}
+		result.setSuccess(success);
+		return result;
+	}
+
+	/**
+	 * get all board list
+	 * 
+	 * @param url
+	 * @return
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws FailureException
+	 */
+	public static List<List<Board>> getAllBoard(String url)
+			throws ClientProtocolException, IOException, JSONException,
+			FailureException {
+		List<List<Board>> boards = new ArrayList<List<Board>>();
+		String content = SBBSCrawer.getUrlContent(url);
+		JSONObject obj = new JSONObject(content);
+		boolean success = obj.getBoolean("success");
+		if (!success) {
+			throw new FailureException();
+		} else {
+			JSONArray groupArray = obj.getJSONArray("boards");
+			for (int i = 0, len = groupArray.length(); i < len; i++) {
+				JSONObject groupJson = groupArray.getJSONObject(i);
+				JSONArray boardsJson = groupJson.getJSONArray("boards");
+				List<Board> list = getBoardWithoutDir(boardsJson);
+				boards.add(list);
+			}
+		}
+		return boards;
+	}
+
+	/**
+	 * 处理注销任务
+	 */
+	public static void logout() {
+		if (isLogined) {
+			String content = "";
+			try {
+				content = SBBSCrawer
+						.getUrlContent("http://bbs.seu.edu.cn/m?act=logout");
+			} catch (ClientProtocolException e) {
+				e.printStackTrace();
+				Log.i("LogoutTask", e.toString());
+			} catch (IOException e) {
+				e.printStackTrace();
+				Log.i("LogoutTask", e.toString());
+			}
+			Log.i("LogoutTask", content);
+		}
+		isLogined = false;
+	}
+
+	public static void destroy() {
+		SBBSCrawer.destroy();
+	}
+}

@@ -1,0 +1,61 @@
+package com.gfan.ui.base;
+
+import android.os.Bundle;
+import android.util.Log;
+
+import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.MenuItem;
+import com.gfan.sbbs.MyApplication;
+
+public abstract class BaseActivity extends SherlockActivity {
+
+	private static final String TAG = "BaseActivity";
+	protected String token;
+	protected boolean isLogined;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		setTheme(com.actionbarsherlock.R.style.Theme_Sherlock_Light_ForceOverflow);
+//		setTheme(com.actionbarsherlock.R.style.Theme_Sherlock);
+		super.onCreate(savedInstanceState);
+		_onCreate(savedInstanceState);
+	}
+	
+	protected void _onCreate(Bundle savedInstanceState){
+		if(null != getSupportActionBar()){
+		getSupportActionBar().setHomeButtonEnabled(true);
+		}
+		isLogined = MyApplication.checkLogin();
+		if(isLogined){
+			Log.i(TAG, "login");
+			token = MyApplication.getToken();
+			setup();
+		}else{
+			Log.i(TAG, "unlogin");
+			processUnLogin();
+		}
+	}
+	
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()){
+		case android.R.id.home:{
+			finish();
+			break;
+		}
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	protected abstract void processUnLogin();
+	protected abstract void setup();
+	
+	protected String getToken(){
+		return this.token;
+	}
+	
+	protected boolean isLogined(){
+		return this.isLogined;
+	}
+	
+}
