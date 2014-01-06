@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:android="http://schemas.android.com/apk/res/android">
-    <item type="id" name="full_image" />
-    <item type="id" name="current_user"></item>
-    <item type="id" name="up_folder"></item>
-</resources>
