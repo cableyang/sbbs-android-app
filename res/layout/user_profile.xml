@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/aa_white"
+    android:orientation="vertical" >
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:scrollbars="horizontal" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical" >
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="13.0dip"
+                android:layout_marginLeft="20.0dip"
+                android:layout_marginRight="20.0dip"
+                android:layout_marginTop="10.0dip"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/profile_userid"
+                    style="@style/LinkText.Bold.Huge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/profile_user_nickname"
+                    style="@style/LinkText.Bold.Huge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/profile_userid" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:orientation="vertical" >
+
+                    <Button
+                        android:id="@+id/btn_send_mail"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10.0dip"
+                        android:text="@string/profile_send_mail"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="130.0dip"
+                android:layout_margin="10.0dip"
+                android:background="@drawable/panel_bg" >
+
+                <View
+                    android:id="@+id/view_top_one"
+                    android:layout_width="1.0dip"
+                    android:layout_height="fill_parent"
+                    android:layout_centerHorizontal="true"
+                    android:background="@drawable/vertical_separation_line_repeat" />
+
+                <View
+                    android:id="@+id/view_top_two"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1.0dip"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/horizontal_separation_line_repeat" />
+
+                <LinearLayout
+                    android:id="@+id/alivenessLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@id/view_top_two"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_toLeftOf="@id/view_top_one"
+                    android:background="@drawable/bg_panel_above_left"
+                    android:clickable="true"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/profile_aliveness"
+                        style="@style/normalText"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10.0dip"
+                        android:gravity="center"
+                        android:text="0" />
+
+                    <TextView
+                        android:id="@+id/profile_aliveness_title"
+                        style="@style/normalText.span"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:text="@string/profile_alive_number" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/identityLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@id/view_top_two"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_toRightOf="@id/view_top_one"
+                    android:background="@drawable/bg_panel_above_right"
+                    android:clickable="true"
+                    android:orientation="vertical"
+                    android:paddingRight="10.0dip" >
+
+                    <TextView
+                        android:id="@+id/profile_identity"
+                        style="@style/normalText"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10.0dip"
+                        android:gravity="center"
+                        android:text="0" />
+
+                    <TextView
+                        android:id="@+id/profile_identity_title"
+                        style="@style/normalText.span"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:text="@string/profile_identity" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/genderLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentLeft="true"
+                    android:layout_below="@id/view_top_two"
+                    android:layout_toLeftOf="@id/view_top_one"
+                    android:background="@drawable/bg_panel_below_left"
+                    android:clickable="true"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/profile_gender"
+                        style="@style/normalText"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10.0dip"
+                        android:gravity="center"
+                        android:text="0" />
+
+                    <TextView
+                        android:id="@+id/profile_gender_title"
+                        style="@style/normalText.span"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:text="@string/profile_gender" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/astrologyLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_below="@id/view_top_two"
+                    android:layout_toRightOf="@id/view_top_one"
+                    android:background="@drawable/bg_panel_below_right"
+                    android:clickable="true"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/profile_astrololgy"
+                        style="@style/normalText"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10.0dip"
+                        android:gravity="center"
+                        android:text="0" />
+
+                    <TextView
+                        android:id="@+id/profile_astrology_title"
+                        style="@style/normalText.span"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:text="@string/profile_astrology" />
+                </LinearLayout>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="130.0dip"
+                android:layout_margin="10.0dip"
+                android:background="@drawable/panel_bg" >
+
+                <View
+                    android:id="@+id/view_one"
+                    android:layout_width="1.0dip"
+                    android:layout_height="fill_parent"
+                    android:layout_centerHorizontal="true"
+                    android:background="@drawable/vertical_separation_line_repeat" />
+
+                <View
+                    android:id="@+id/view_two"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1.0dip"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/horizontal_separation_line_repeat" />
+
+                <LinearLayout
+                    android:id="@+id/loginTimeLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@id/view_two"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_toLeftOf="@id/view_one"
+                    android:background="@drawable/bg_panel_above_left"
+                    android:clickable="true"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/profile_login_times"
+                        style="@style/normalText"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10.0dip"
+                        android:gravity="center"
+                        android:text="0" />
+
+                    <TextView
+                        android:id="@+id/profile_login_times_title"
+                        style="@style/normalText.span"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:text="@string/profile_login_count" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/postNumberLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@id/view_two"
+                    android:layout_alignParentRight="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_toRightOf="@id/view_one"
+                    android:background="@drawable/bg_panel_above_right"
+                    android:clickable="true"
+                    android:orientation="vertical"
+                    android:paddingRight="10.0dip" >
+
+                    <TextView
+                        android:id="@+id/profile_post_number"
+                        style="@style/normalText"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10.0dip"
+                        android:gravity="center"
+                        android:text="0" />
+
+                    <TextView
+                        android:id="@+id/profile_post_number_title"
+                        style="@style/normalText.span"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:text="@string/profile_post_count" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/performValueLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentLeft="true"
+                    android:layout_below="@id/view_two"
+                    android:layout_toLeftOf="@id/view_one"
+                    android:background="@drawable/bg_panel_below_left"
+                    android:clickable="true"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/profile_user_perform_value"
+                        style="@style/normalText"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10.0dip"
+                        android:gravity="center"
+                        android:text="0" />
+
+                    <TextView
+                        android:id="@+id/profile_user_perform_title"
+                        style="@style/normalText.span"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:text="@string/profile_user_perform_title" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/experienceLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_below="@id/view_two"
+                    android:layout_toRightOf="@id/view_one"
+                    android:background="@drawable/bg_panel_below_right"
+                    android:clickable="true"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/profile_user_experience"
+                        style="@style/normalText"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10.0dip"
+                        android:gravity="center"
+                        android:text="0" />
+
+                    <TextView
+                        android:id="@+id/profile_user_experience_title"
+                        style="@style/normalText.span"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center"
+                        android:text="@string/profile_user_experience" />
+                </LinearLayout>
+            </RelativeLayout>
+            <!--
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="47.0dip"
+                android:gravity="center_vertical" >
+
+                <ImageButton
+                    android:id="@id/btn_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:layout_alignParentRight="true"
+                    android:background="@null"
+                    android:paddingLeft="10.0dip"
+                    android:paddingRight="10.0dip"
+                    android:src="@drawable/top_search_selector" />
+
+                <EditText
+                    android:id="@id/search_edit"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="12.0dip"
+                    android:layout_toLeftOf="@id/btn_search"
+                    android:hint="查询网友" />
+            </RelativeLayout>
+            -->
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20.0dip"
+                android:orientation="horizontal" >
+
+                <TextView 
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingRight="5dp"
+                    android:text="@string/profile_last_login"
+                    style="@style/LinkText"
+                    />
+                <TextView
+                    android:id="@+id/profile_last_login"
+                    style="@style/LinkText"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="2012.12.21 00:00:00" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
