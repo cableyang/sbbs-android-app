@@ -1,0 +1,486 @@
+package com.yuchao.ui;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.view.SubMenu;
+import com.gfan.http.HttpException;
+import com.gfan.sbbs.MyApplication;
+import com.gfan.sbbs.Preferences;
+import com.gfan.task2.ImageCache;
+import com.gfan.task2.SimpleImageLoader;
+import com.gfan.task2.TaskResult;
+import com.gfan.ui.base.BaseActivity;
+import com.umeng.analytics.MobclickAgent;
+import com.yuchao.domain.Attachment;
+import com.yuchao.domain.Topic;
+import com.yuchao.task.GenericTask;
+import com.yuchao.task.TaskAdapter;
+import com.yuchao.task.TaskListener;
+
+
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.ClipboardManager;
+import android.text.Html;
+import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+public class SinglePostActivity extends BaseActivity {
+	private Topic topic;
+	private TextView postTitle;
+	private TextView textTime;
+	private TextView textAuthor;
+	private TextView textContent;
+	private TextView textQuote;
+	private TextView textQuoter;
+	private TextView textSourceIP;
+	
+	private LinearLayout imgLayout;
+	private List<Attachment> attList;
+	private String boardID, url, errorCause;
+	private int id;
+	private GenericTask doRetrieveTask;
+	private List<GenericTask> getPhotoTaskList;
+	private MyApplication application;
+
+	private static Bitmap mDefaultBitmap = ImageCache.mDefaultBitmap;
+	private static final int MENU_SHARE = 0;
+	private static final int MENU_REPLY = 1;
+	private static final int MENU_AUTHOR = 2;
+	private static final int MENU_MAIL = 3;
+	private static final int MENU_MORE = 4;
+	private static final int MENU_ONE_TOPIC = 5;
+	private static final int MENU_COPY = 6;
+	private static final int MENU_ONE_TOPIC_ALL = 7;
+	private static final int MENU_EDIT = 8;
+
+	private static final String LAUNCH_ACTION = "com.yuchao.ui.SINGLEPOST";
+	private static final String TAG = "SinglePostActivity";
+
+	private TaskListener mRetrieveTaskListener = new TaskAdapter() {
+		private ProgressDialog pdialog;
+
+		@Override
+		public String getName() {
+			return "mRetrieveTaskListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			pdialog = new ProgressDialog(SinglePostActivity.this);
+			pdialog.setMessage(getResources().getString(R.string.loading));
+			pdialog.show();
+			pdialog.setCancelable(false);
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			pdialog.dismiss();
+			processResult(result);
+		}
+	};
+
+	public static Intent createIntent(Context context) {
+		Intent intent = new Intent(LAUNCH_ACTION);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		return intent;
+	}
+
+	@Override
+	protected void _onCreate(Bundle savedInstanceState) {
+		super._onCreate(savedInstanceState);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		LayoutInflater inflater = getLayoutInflater();
+		LinearLayout postLayout = (LinearLayout) inflater.inflate(
+				R.layout.singlepost, null);
+		this.setContentView(postLayout);
+		imgLayout = (LinearLayout) postLayout.findViewById(R.id.post_att);
+		topic = (Topic) getIntent().getExtras().getSerializable("topic");
+		getPhotoTaskList = new ArrayList<GenericTask>();
+		initArgs();
+		bindView();
+		if (null != topic) {
+			createTopic(topic);
+			processAtt();
+		} else {
+			doRetrieve();
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		MobclickAgent.onResume(this);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
+	}
+
+	private void doRetrieve() {
+		doRetrieveTask = new RetrieveTask();
+		doRetrieveTask.setListener(mRetrieveTaskListener);
+		doRetrieveTask.execute(url);
+	}
+
+
+	private void processAtt() {
+		TextView attLabel = (TextView) this.findViewById(R.id.post_att_label);
+		TextView attLink = (TextView) this.findViewById(R.id.post_att_link);
+		if (topic.isHasAtt()) {
+			StringBuffer sb = new StringBuffer();
+			Attachment att;
+			for (int i = 0, len = attList.size(); i < len; i++) {
+				att = attList.get(i);
+				boolean loadPic = MyApplication.mPreference.getBoolean(
+						Preferences.LOADPIC, true);
+				boolean isImage = att.isImage();
+				if (loadPic && isImage) {
+					ImageView imageView = new ImageView(SinglePostActivity.this);
+					LayoutParams layoutParams = new LayoutParams(
+							LayoutParams.WRAP_CONTENT,
+							LayoutParams.WRAP_CONTENT);
+					imageView.setLayoutParams(layoutParams);
+					imageView.setImageBitmap(mDefaultBitmap);
+					imgLayout.addView(imageView);
+					imageView.setOnClickListener(imageClickListener);
+					SimpleImageLoader.display(imageView, att);
+				} else {
+					sb.append("<a href='").append(att.getUrl()).append("'>");
+					sb.append(att.getFileName()).append("</a><br/>");
+				}
+			}
+			attLink.setText(Html.fromHtml(sb.toString()));
+			attLink.setMovementMethod(LinkMovementMethod.getInstance());
+			// imgLayout.addView(attLink);
+			if (TextUtils.isEmpty(sb.toString().trim())) {
+				attLink.setVisibility(View.GONE);
+			}
+		} else {
+			attLabel.setVisibility(View.GONE);
+			attLink.setVisibility(View.GONE);
+		}
+	}
+	
+	private void initArgs(){
+		postTitle = (TextView) this.findViewById(R.id.PostTitle);
+		textAuthor = (TextView) this.findViewById(R.id.post_text_author);
+		textTime = (TextView) this.findViewById(R.id.post_text_time);
+		textContent = (TextView) this.findViewById(R.id.post_text_content);
+		textQuote = (TextView) this.findViewById(R.id.post_text_quote);
+		textQuoter = (TextView) this.findViewById(R.id.post_text_quoter);
+		textSourceIP = (TextView) this.findViewById(R.id.post_text_source);
+		
+		id = getIntent().getExtras().getInt("id");
+		if (0 == id) {
+			id = topic.getId();
+		}
+		boardID = getIntent().getExtras().getString("boardID");
+		if (null == boardID && null != topic) {
+			boardID = topic.getTalkSpace();
+		}
+		url = "http://bbs.seu.edu.cn/api/topic/" + boardID + "/" + id
+				+ ".json?limit=1";
+		if (isLogined()) {
+			url = url.concat("&token=" + token);
+		}
+	}
+
+	private void bindView() {
+		textQuote.setClickable(true);
+		textQuote.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(SinglePostActivity.this,
+						SinglePostActivity.class);
+				Bundle bundle = new Bundle();
+				int reid = topic.getReid();
+				bundle.putString("boardID", boardID);
+				bundle.putInt("id", reid);
+				intent.putExtras(bundle);
+				startActivity(intent);
+			}
+		});
+		// 暂时没找到setOnclickListener无效的方法...
+		// 估计是要setText之后再设置onClickListenser方法才有效，暂时不改了
+		textQuote.setOnTouchListener(new View.OnTouchListener() {
+
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					Intent intent = new Intent(SinglePostActivity.this,
+							SinglePostActivity.class);
+					Bundle bundle = new Bundle();
+					int reid = topic.getReid();
+					bundle.putString("boardID", topic.getTalkSpace());
+					bundle.putInt("id", reid);
+					intent.putExtras(bundle);
+					startActivity(intent);
+					return true;
+				} else {
+					return false;
+				}
+			}
+		});
+
+	}
+
+	private void processResult(TaskResult result) {
+		if (TaskResult.IO_ERROR == result || TaskResult.Failed == result) {
+			AlertDialog.Builder ab = new AlertDialog.Builder(this);
+			ab.setTitle("提示");
+			ab.setMessage("加载失败，是否重新加载");
+			ab.setPositiveButton("确定", new OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					doRetrieve();
+				}
+			});
+			ab.setNegativeButton("取消", null);
+			ab.create();
+			ab.show();
+			return;
+		}
+		createTopic(topic);
+		processAtt();
+	}
+
+	private void createTopic(Topic topic) {
+		setTitle(topic.getTitle());
+		postTitle.setText(topic.getTitle());
+		textAuthor.setText(topic.getAuthor());
+		textTime.setText(topic.getTime());
+		textContent.setText(topic.getContent());
+		if (null != topic.getQuoter()) {
+			textQuoter.setText("引自 " + topic.getQuoter());
+		} else {
+			textQuoter.setVisibility(View.GONE);
+		}
+		textQuote.setText(topic.getQuote());
+		textSourceIP.setText(topic.getSourceIP());
+		if (TextUtils.isEmpty(topic.getQuote())) {
+			textQuote.setVisibility(View.GONE);
+		}
+		if (TextUtils.isEmpty(topic.getSourceIP())) {
+			textSourceIP.setVisibility(View.GONE);
+		}
+		if (topic.isHasAtt()) {
+			attList = topic.getAttList();
+		}
+	}
+
+
+
+	@Override
+	public boolean onOptionsItemSelected(
+			com.actionbarsherlock.view.MenuItem item) {
+		switch (item.getItemId()) {
+		case MENU_SHARE:{
+			Intent intent = new Intent(Intent.ACTION_SEND);
+			intent.setType("image/png");
+			String link = "http://bbs.seu.edu.cn/r/post/" + boardID + "/"
+					+ id;
+			intent.putExtra(Intent.EXTRA_TEXT,
+					"#虎踞龙蟠BBS话题分享#《" + topic.getTitle() + "》:" + link);
+			if (topic.isHasAtt()) {
+				for (Attachment att : topic.getAttList()) {
+					if (att.isImage()) {
+						Uri u = Uri.parse(att.getUrl());
+						intent.putExtra(Intent.EXTRA_STREAM, u);
+						break;
+					}
+				}
+			}
+			startActivity(Intent.createChooser(intent, getTitle()));
+			break;
+		}
+		case MENU_REPLY:{
+			Bundle bundle = new Bundle();
+			String title = topic.getTitle();
+			if (!title.contains("Re:")) {
+				title = "Re: ".concat(title);
+			}
+			bundle.putString(WritePost.EXTRA_TITLE, title);
+			bundle.putString(WritePost.EXTRA_BOARD, boardID);
+			bundle.putInt(WritePost.EXTRA_REID, id);
+			bundle.putString(WritePost.EXTRA_CONTENT, topic.getContent());
+			Intent intent = new Intent(SinglePostActivity.this,
+					WritePost.class);
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		}
+		case MENU_AUTHOR:{
+			String author = topic.getAuthor();
+			Intent intent = new Intent(SinglePostActivity.this,
+					ViewProfileActivity.class);
+			Bundle bundle = new Bundle();
+			bundle.putString(ViewProfileActivity.EXTRA_USER, author);
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		}
+		case MENU_MAIL:{
+			String author = topic.getAuthor();
+			Intent intent = new Intent(SinglePostActivity.this,
+					WriteMail.class);
+			Bundle bundle = new Bundle();
+			bundle.putString(WriteMail.EXTRA_RECIEVER, author);
+			bundle.putString(WriteMail.EXTRA_TITLE, topic.getTitle());
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		}
+		case MENU_ONE_TOPIC: {// 同主题查看
+			Intent intent = new Intent(this, Reply.class);
+			Bundle bundle = new Bundle();
+			String title = topic.getTitle();
+			if (title.contains("Re:")) {
+				title = title.replace("Re:", "").trim();
+			}
+			bundle.putString("title", title);
+			bundle.putString("boardID", boardID);
+			int id = topic.getId();
+			bundle.putInt("id", id);
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		}
+		case MENU_COPY: {
+			ClipboardManager cm = (ClipboardManager) this
+					.getSystemService(Context.CLIPBOARD_SERVICE);
+			cm.setText(topic.getContent());
+			break;
+		}
+		case MENU_ONE_TOPIC_ALL: {
+			Intent intent = new Intent(this, Reply.class);
+			Bundle bundle = new Bundle();
+			String title = topic.getTitle();
+			if (title.contains("Re:")) {
+				title = title.replace("Re:", "").trim();
+			}
+			bundle.putString("title", title);
+			bundle.putString("boardID", boardID);
+			int gid = topic.getGid();
+			bundle.putInt("id", gid);
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		}
+		case MENU_EDIT: {
+			Intent intent = new Intent(this, WritePost.class);
+			Bundle bundle = new Bundle();
+			bundle.putInt("TYPE", 1);// 编辑模式
+			bundle.putString(WritePost.EXTRA_BOARD, topic.getTalkSpace());
+			bundle.putInt(WritePost.EXTRA_ID, topic.getId());
+			bundle.putString(WritePost.EXTRA_TITLE, topic.getTitle());
+			bundle.putString(WritePost.EXTRA_CONTENT, topic.getContent());
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		}	
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+
+		menu.add(Menu.NONE, MENU_SHARE, Menu.NONE, "share").setIcon(R.drawable.ic_menu_share).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		menu.add(Menu.NONE, MENU_REPLY, Menu.NONE, "reply").setIcon(R.drawable.ic_menu_topic_reply).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		menu.add(Menu.NONE, MENU_AUTHOR, Menu.NONE, "author").setIcon(R.drawable.ic_menu_profile_inverse).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		menu.add(Menu.NONE, MENU_MAIL, Menu.NONE, "mail").setIcon(R.drawable.ic_menu_new_mail).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		SubMenu subMenu = menu.addSubMenu(Menu.NONE, MENU_MORE, Menu.NONE, "more");
+		subMenu.add(Menu.NONE, MENU_ONE_TOPIC, Menu.NONE, "同主题展开(此处)");
+		subMenu.add(Menu.NONE, MENU_ONE_TOPIC_ALL, Menu.NONE, "同主题展开");
+		subMenu.add(Menu.NONE, MENU_EDIT, Menu.NONE, "编辑");
+		subMenu.add(Menu.NONE, MENU_COPY, Menu.NONE, "复制");
+		MenuItem subMenuItem = subMenu.getItem();
+		subMenuItem.setIcon(R.drawable.ic_menu_more).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (doRetrieveTask != null
+				&& doRetrieveTask.getStatus() == GenericTask.Status.RUNNING) {
+			doRetrieveTask.cancel(true);
+		}
+		for (GenericTask getPhotoTask : getPhotoTaskList) {
+			if (null != getPhotoTask
+					&& getPhotoTask.getStatus() == GenericTask.Status.RUNNING) {
+				getPhotoTask.cancel(true);
+			}
+		}
+		MyApplication.mImageLoader.clean();
+		MyApplication.mImageLoader.getImageManager().clear();
+		super.onDestroy();
+	}
+
+	private class RetrieveTask extends GenericTask {
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			// ba = SBBSSupport.getBoardTopicListAPI(params[0], null);
+			List<Topic> topicList = null;
+			try {
+				topicList = MyApplication.bbsOp.getTopicList(params[0]);
+			} catch (HttpException e) {
+				e.printStackTrace();
+				errorCause = e.getMessage();
+				return TaskResult.Failed;
+			}
+			topic = topicList.get(0);
+
+			return TaskResult.OK;
+		}
+	}
+
+
+	@Override
+	protected void processUnLogin() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void setup() {
+		// TODO Auto-generated method stub
+
+	}
+	
+	private View.OnClickListener imageClickListener = new View.OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			Attachment att = (Attachment) v.getTag();
+			Intent intent = new Intent(SinglePostActivity.this,FullImageView.class);
+			intent.putExtra(FullImageView.EXTRA_IMAGE_URL, att.getUrl());
+			startActivity(intent);
+		}
+	};
+}

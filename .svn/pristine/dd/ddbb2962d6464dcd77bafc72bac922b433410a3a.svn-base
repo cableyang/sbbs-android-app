@@ -1,0 +1,20 @@
+package com.gfan.task2;
+
+public class LoginException extends Exception {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	public void printStackTrace() {
+		super.printStackTrace();
+	}
+
+	@Override
+	public String toString() {
+		return "LoginException";
+	}
+
+}

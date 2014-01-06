@@ -1,0 +1,239 @@
+package com.yuchao.ui;
+
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.http.client.ClientProtocolException;
+import org.json.JSONException;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.yuchao.db.TopicDAO;
+import com.yuchao.domain.Topic;
+
+import com.yuchao.task.GenericTask;
+import com.yuchao.task.TaskAdapter;
+import com.yuchao.task.TaskListener;
+import com.yuchao.util.SBBSSupport;
+import com.gfan.db2.TopicTable;
+import com.gfan.sbbs.MyApplication;
+import com.gfan.task2.TaskResult;
+import com.gfan.ui.Adapter.TopTenAdapter;
+import com.laohuai.appdemo.customui.ui.MyListView;
+
+public class Main extends Activity {
+	private static final String TAG ="TOPTEN";
+
+	public static final int REFRESH_TOP_TEN = 1;
+	public ProgressDialog pd;
+	public MyListView topTenListView;// 保存所有的十大帖子信息
+	private List<Topic> topList;
+	private TopTenAdapter myAdapter;
+	private boolean isLoaded = false;// 本页是否已经加载
+	private boolean forceLoad = false;
+	private String url;
+	private TextView topTenView;
+	private GenericTask doRetrieveTask;
+	private TextView topTenRefreshBtn;
+	private MyApplication application;
+
+	private TaskListener mRetrieveTaskListener = new TaskAdapter() {
+		ProgressDialog pdialog;
+
+		@Override
+		public String getName() {
+			return "mRetrieveTask";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			if (!isLoaded) {
+				pdialog = new ProgressDialog(Main.this);
+				pdialog.setMessage("正在加载...");
+				pdialog.show();
+			}
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			topTenListView.onRefreshComplete();
+			if (null != pdialog) {
+				pdialog.dismiss();
+			}
+			if (TaskResult.IO_ERROR == result) {
+				Toast.makeText(MyApplication.mContext, "加载失败", 1).show();
+				return;
+			}
+			if (result == TaskResult.NO_DATA) {
+				Toast.makeText(MyApplication.mContext, "目前没有十大，去别处溜达下吧~", 1)
+						.show();
+				return;
+			}
+			isLoaded = true;
+			forceLoad = false;
+			draw();
+			goTop();
+		}
+	};
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		application = (MyApplication) getApplication();
+		LayoutInflater inflater = getLayoutInflater();
+		LinearLayout layout_top_ten = (LinearLayout) inflater.inflate(
+				R.layout.listview_top_ten, null);
+
+		setContentView(layout_top_ten);
+		initView();
+		init();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (isLoaded) { // 如果加载过了，就不重新加载了，除非用户手动加载
+			return;
+		}
+		this.doRetrieve();
+	}
+
+	private void initView() {
+		topTenView = (TextView) this.findViewById(R.id.top_ten_item);
+		topTenRefreshBtn = (TextView) this.findViewById(R.id.top_ten_refresh);
+		topTenListView = (MyListView) this
+				.findViewById(R.id.listview_allTopics);
+		myAdapter = new TopTenAdapter(this);
+		topTenListView.setAdapter(myAdapter);
+		topTenListView.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Topic topic = getContextItemTopic(position);
+				if (null == topic) {
+					return;
+				}
+				Intent intent = new Intent(Main.this, Reply.class);
+				Bundle bundle = new Bundle();
+				bundle.putInt("id", topic.getId());
+				Log.i("TopTen", "choose " + position);
+				bundle.putString("title", topic.getTitle());
+				bundle.putString("boardID", topic.getTalkSpace());
+				intent.putExtras(bundle);
+				startActivity(intent);
+			}
+		});
+		topTenListView.setonRefreshListener(new MyListView.OnRefreshListener() {
+
+			@Override
+			public void onRefresh() {
+				forceLoad = true;
+				doRetrieve();
+			}
+		});
+	}
+
+	private void init() {
+		if (application.checkLogin()) {
+			url = "http://bbs.seu.edu.cn/api/hot/topten.json?token="
+					+ MyApplication.getToken();
+		} else {
+			url = "http://bbs.seu.edu.cn/api/hot/topten.json";
+		}
+		topTenRefreshBtn.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				forceLoad = true;
+				doRetrieve();
+			}
+		});
+		topTenView.setText("本站十大");
+		topTenView.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				if (topTenListView.isShown()) {
+					topTenListView.setVisibility(View.GONE);
+				} else {
+					topTenListView.setVisibility(View.VISIBLE);
+				}
+			}
+		});
+	}
+
+	private void doRetrieve() {
+		doRetrieveTask = new RetrievetTopTen();
+		doRetrieveTask.setListener(mRetrieveTaskListener);
+		doRetrieveTask.execute(url);
+	}
+
+	private void draw() {
+		if (null != topList) {
+			myAdapter.refresh(topList);
+		}
+	}
+
+	private void goTop() {
+		topTenListView.setSelection(1);
+	}
+
+	private Topic getContextItemTopic(int position) {
+		if (position >= 1 && position <= myAdapter.getCount()) {
+			return (Topic) myAdapter.getItem(position - 1);
+		}
+		return null;
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (doRetrieveTask != null && !doRetrieveTask.isCancelled()) {
+			doRetrieveTask.cancel(true);
+		}
+		super.onDestroy();
+	}
+
+	private class RetrievetTopTen extends GenericTask {
+		@Override
+		protected TaskResult _doInBackground(String... arg0) {
+			try {
+				TopicDAO topicDAO = new TopicDAO(MyApplication.mContext);
+				List<Topic> list = topicDAO.fetchTopics(TopicTable.TYPE_HOT);
+				if (list.size() != 0 && !forceLoad) {
+					topList = list;
+					Log.i(TAG, "get topics from database");
+				} else {
+					topList = SBBSSupport.getTopicListApi(arg0[0]);
+					topicDAO.deleteList(TopicTable.TYPE_HOT);
+					long id = topicDAO.insertTopic(topList, TopicTable.TYPE_HOT);
+					Log.i(TAG, "force load,id is "+id);
+				}
+			} catch (ClientProtocolException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (IOException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			}
+			if (null == topList || topList.size() == 0) {
+				return TaskResult.NO_DATA;
+			}
+			return TaskResult.OK;
+		}
+	}
+}

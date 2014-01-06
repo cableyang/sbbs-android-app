@@ -1,0 +1,130 @@
+package com.yuchao.domain;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.gfan.http.HttpException;
+
+import android.app.Activity;
+import android.widget.ImageView;
+
+public class Attachment implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private Integer id, pos, size;
+	private String fileName, url;
+	private boolean isImage,isLoadFinish;
+	private ImageView iView;
+	private ImageLoadListener mImageLoadListener;
+
+	public Attachment(Integer id, Integer pos, Integer size, String fileName,
+			String url) {
+		this.id = id;
+		this.pos = pos;
+		this.size = size;
+		this.fileName = fileName;
+		this.url = url;
+	}
+
+	public boolean isImage() {
+		isImage = fileName.endsWith("png") || fileName.endsWith("jpg")
+				|| fileName.endsWith("jpeg") || fileName.endsWith("gif")
+				|| fileName.endsWith("bmp");
+		return isImage;
+	}
+	
+	public void setIView(Activity activity){
+		this.iView = new ImageView(activity);
+	}
+
+	public ImageView getIView(){
+		return this.iView;
+	}
+	
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public Integer getPos() {
+		return pos;
+	}
+
+	public void setPos(Integer pos) {
+		this.pos = pos;
+	}
+
+	public Integer getSize() {
+		return size;
+	}
+
+	public void setSize(Integer size) {
+		this.size = size;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+	
+	public void setImageLoadListener(ImageLoadListener mImageLoadListener){
+		this.mImageLoadListener = mImageLoadListener;
+	}
+	
+	public void setImageLoadFinish(boolean isLoadFinish){
+		this.isLoadFinish = isLoadFinish;
+		if(isLoadFinish){
+			mImageLoadListener.onPostImageLoad();
+		}
+	}
+
+	public static Attachment parseAtt(JSONObject obj) throws JSONException {
+		int id = obj.getInt("id");
+		int pos = obj.getInt("pos");
+		int size = obj.getInt("size");
+		String fileName = obj.getString("filename");
+		String url = obj.getString("url");
+		return new Attachment(id, pos, size, fileName, url);
+	}
+	
+	public static List<Attachment> parseAttList(JSONObject obj) throws HttpException{
+		List<Attachment> attList = new ArrayList<Attachment>();
+		Attachment att;
+		try{
+			JSONArray attArray = obj.getJSONArray("attachments");
+			for (int i = 0, len = attArray.length(); i < len; i++) {
+				JSONObject attJson = attArray.getJSONObject(i);
+				att = Attachment.parseAtt(attJson);
+				attList.add(att);
+			}
+		}catch(JSONException jse){
+			throw new HttpException(jse.getMessage(),jse);
+		}
+		return attList;
+	}
+	
+	public interface ImageLoadListener{
+		public void onPreImageLoad();
+		public void onPostImageLoad();
+	};
+}

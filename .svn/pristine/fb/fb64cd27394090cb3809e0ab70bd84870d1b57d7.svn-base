@@ -1,0 +1,30 @@
+package com.yuchao.util;
+
+import java.util.List;
+
+import com.yuchao.domain.User;
+
+public class UserListUtils {
+	private boolean success;
+	private List<User> userList;
+	private String error;
+	public boolean isSuccess() {
+		return success;
+	}
+	public void setSuccess(boolean success) {
+		this.success = success;
+	}
+	public List<User> getUserList() {
+		return userList;
+	}
+	public void setUserList(List<User> userList) {
+		this.userList = userList;
+	}
+	public String getError() {
+		return error;
+	}
+	public void setError(String error) {
+		this.error = error;
+	}
+	
+}

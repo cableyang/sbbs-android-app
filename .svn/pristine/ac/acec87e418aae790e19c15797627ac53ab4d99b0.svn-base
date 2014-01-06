@@ -1,0 +1,295 @@
+package com.yuchao.ui;
+
+import java.io.IOException;
+import java.util.List;
+
+import org.json.JSONException;
+
+import com.gfan.sbbs.MyApplication;
+import com.gfan.task2.TaskResult;
+import com.gfan.ui.Adapter.FriendsListAdapter;
+import com.laohuai.appdemo.customui.ui.MyListView;
+import com.umeng.analytics.MobclickAgent;
+import com.yuchao.domain.User;
+import com.yuchao.task.GenericTask;
+import com.yuchao.task.TaskAdapter;
+import com.yuchao.task.TaskListener;
+import com.yuchao.util.SBBSSupport;
+import com.yuchao.util.UserListUtils;
+
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class Friends extends com.gfan.ui.base.BaseActivity {
+	private MyListView friendsList;
+	private List<User> friends;
+	private FriendsListAdapter myAdapter;
+	private GenericTask doRetrieveTask, delFriends;
+	private String url;
+
+	private static final int VIEWPROFILE = Menu.FIRST;
+	private static final int MAIL = Menu.FIRST + 1;
+	private static final int REMOVE = Menu.FIRST + 2;
+
+	private TaskListener mRetrieveTaskListener = new TaskAdapter() {
+
+		private ProgressDialog pdialog;
+		@Override
+		public String getName() {
+			return "mRetrieveTaskListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			pdialog = new ProgressDialog(Friends.this);
+			pdialog.setMessage("正在努力加载中...");
+			pdialog.show();
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			pdialog.cancel();
+			friendsList.onRefreshComplete();
+			if (TaskResult.IO_ERROR == result) {
+				Toast.makeText(MyApplication.mContext, "网络错误", Toast.LENGTH_SHORT).show();
+			} else {
+				if (null == friends || 0 == friends.size()) {
+					Toast.makeText(MyApplication.mContext, "目前无好友在线", Toast.LENGTH_SHORT).show();
+					return;
+				} else if (TaskResult.Failed == result) {
+					MyApplication.makeToast("加载失败");
+					return;
+				}
+				draw();
+			}
+		}
+	};
+
+	private TaskListener mDelFriendListener = new TaskAdapter() {
+
+		@Override
+		public String getName() {
+			return "mDelFriendListener";
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			if (TaskResult.IO_ERROR == result) {
+				Toast.makeText(Friends.this, "网络错误", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			if (TaskResult.Failed == result) {
+				Toast.makeText(Friends.this, "删除失败", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			if (TaskResult.OK == result) {
+				Toast.makeText(Friends.this, "删除成功", Toast.LENGTH_SHORT).show();
+				return;
+			}
+		}
+	};
+
+	@Override
+	protected void _onCreate(Bundle savedInstanceState) {
+		super._onCreate(savedInstanceState);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		setTitle("在线好友");
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		MobclickAgent.onResume(this);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
+	}
+
+
+	private void setupState() {
+		friendsList = (MyListView) this.findViewById(R.id.my_list);
+		myAdapter = new FriendsListAdapter(this);
+		friendsList.setAdapter(myAdapter);
+		friendsList.setonRefreshListener(new MyListView.OnRefreshListener() {
+
+			@Override
+			public void onRefresh() {
+				doRetrieve();
+			}
+		});
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo lm = (AdapterContextMenuInfo) item.getMenuInfo();
+		User user = getContextItemUser(lm.position);
+		if (null == user) {
+			return false;
+		}
+		switch (item.getItemId()) {
+		case MAIL: {
+			Intent intent = new Intent(this, WriteMail.class);
+			Bundle bundle = new Bundle();
+			String writeTo = user.getId();
+			Log.i("Friends", writeTo);
+			bundle.putString("reciever", writeTo);
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		}
+		case VIEWPROFILE: {
+			Log.i("Friends", user.getId());
+			String userID = user.getId();
+			viewProfile(userID);
+			break;
+		}
+		case REMOVE: {
+			String userID = user.getId();
+			delFriends(userID);
+		}
+		}
+
+		return super.onContextItemSelected(item);
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		// AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
+		menu.setHeaderTitle("操作");
+		menu.add(0, VIEWPROFILE, 0, "查看资料");
+		menu.add(0, MAIL, 0, "寄信");
+		menu.add(0, REMOVE, 0, "删除好友");
+	}
+
+	/**
+	 * 查看用户资料
+	 * 
+	 * @param userID
+	 */
+	private void viewProfile(String userID) {
+		Intent intent = new Intent(this, ViewProfileActivity.class);
+		Bundle bundle = new Bundle();
+		bundle.putString("userID", userID);
+		intent.putExtras(bundle);
+		startActivity(intent);
+	}
+
+	private void doRetrieve() {
+		doRetrieveTask = new LoadFriendListTask();
+		doRetrieveTask.setListener(mRetrieveTaskListener);
+		doRetrieveTask.execute(url);
+	}
+
+	private void delFriends(String id) {
+		delFriends = new DoDelFriends();
+		delFriends.setListener(mDelFriendListener);
+		String token = MyApplication.getToken();
+		delFriends.execute(id, token);
+	}
+
+	private void draw() {
+		myAdapter.refresh(friends);
+	}
+
+	private User getContextItemUser(int position) {
+		if (position >= 1 && position <= myAdapter.getCount()) {
+			return (User) myAdapter.getItem(position - 1);
+		}
+		return null;
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (doRetrieveTask != null && !doRetrieveTask.isCancelled()) {
+			doRetrieveTask.cancel(true);
+		}
+		if (null != delFriends && !delFriends.isCancelled()) {
+			delFriends.cancel(true);
+		}
+		super.onDestroy();
+	}
+
+	private class LoadFriendListTask extends GenericTask {
+
+		private UserListUtils friendUtils;
+
+		@Override
+		protected TaskResult _doInBackground(String... arg0) {
+			try {
+				friendUtils = SBBSSupport.getFriendList(arg0[0]);
+				boolean success = friendUtils.isSuccess();
+				if (!success) {
+					// makeToast(friendUtils.getError());
+					return TaskResult.Failed;
+				} else {
+					friends = friendUtils.getUserList();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			}
+
+			return TaskResult.OK;
+		}
+	}
+
+	private class DoDelFriends extends GenericTask {
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			String id = params[0];
+			String token = params[1];
+			try {
+				String url = "http://bbs.seu.edu.cn/api/friends/delete.json?token="
+						+ token + "&id=" + id;
+				boolean success = SBBSSupport.dealFriends(url);
+				if (success) {
+					return TaskResult.OK;
+				} else {
+					return TaskResult.Failed;
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			}
+		}
+	}
+
+	@Override
+	protected void processUnLogin() {
+		Toast.makeText(this, "请登录", Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	protected void setup() {
+		this.setContentView(R.layout.list_without_header);
+		url = "http://bbs.seu.edu.cn/api/friends/get.json?token="
+				+ token;
+		setupState();
+		registerForContextMenu(friendsList);
+		doRetrieve();
+	}
+}

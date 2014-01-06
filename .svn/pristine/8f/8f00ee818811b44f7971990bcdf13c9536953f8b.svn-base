@@ -1,0 +1,94 @@
+package com.yuchao.ui;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.Window;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+public class MoreActivity extends Activity {
+	private TextView pageTitle;
+	private TextView friendsView,recommendView,noticeView,settingsView,sectionView;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		LayoutInflater inflate = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		LinearLayout moreView = (LinearLayout) inflate.inflate(R.layout.more_view, null);
+		this.setContentView(moreView);
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		initView();
+		init();
+	}
+
+	private void initView(){
+		pageTitle = (TextView) this.findViewById(R.id.new_header_txt);
+		friendsView = (TextView) this.findViewById(R.id.more_friends);
+		recommendView = (TextView) this.findViewById(R.id.more_recommend);
+		noticeView = (TextView) this.findViewById(R.id.more_notice);
+		settingsView = (TextView) this.findViewById(R.id.more_settings);
+		sectionView = (TextView) this.findViewById(R.id.more_sections);
+		TextView newItem = (TextView) this.findViewById(R.id.new_btn);
+		newItem.setVisibility(View.GONE);
+	}
+	
+	private void init(){
+		pageTitle.setText("¸ü¶à");
+		friendsView.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(MoreActivity.this,
+						Friends.class);
+				startActivity(intent);
+			}
+		});
+		sectionView.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(MoreActivity.this,Sections.class);
+				startActivity(intent);	
+			}
+		});
+		recommendView.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Bundle bundle = new Bundle();
+				bundle.putString("boardID", "recommend");
+				bundle.putInt("mode",4);
+				Intent intent = new Intent(MoreActivity.this,
+						TopicList.class);
+				intent.putExtras(bundle);
+				startActivity(intent);
+			}
+		});
+		noticeView.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(MoreActivity.this,
+						NoticeActivity.class);
+				startActivity(intent);
+			}
+		});
+		settingsView.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(MoreActivity.this,Preference.class);
+				startActivity(intent);
+			}
+		});
+	}
+}

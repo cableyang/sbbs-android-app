@@ -1,0 +1,311 @@
+package com.yuchao.ui;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
+import com.gfan.bean.Mail;
+import com.gfan.http.HttpException;
+import com.gfan.sbbs.MyApplication;
+import com.gfan.task.GenericTask;
+import com.gfan.task.TaskAdapter;
+import com.gfan.task.TaskListener;
+import com.gfan.task2.TaskResult;
+import com.gfan.ui.base.BaseActivity;
+import com.umeng.analytics.MobclickAgent;
+
+public class MailBody extends BaseActivity {
+	private String num,errorCause;
+	private int type;
+	private Mail mail;
+	private TextView authorView, timeView, titleView,contentView, quoterView, quoteView;
+
+	private GenericTask mRetrieveTask, mDelTask;
+
+	private static final int MENU_REPLY = 10;
+	private static final int MENU_AUTHOR = 11;
+	private static final int MENU_DELETE = 12;
+
+	private static final String LAUNCH_ACTION = "com.yuchao.ui.MAIL";
+	private static final String TAG = "MailBody";
+
+	private TaskListener mRetrieveTaskListener = new TaskAdapter() {
+		private ProgressDialog pdialog;
+
+		@Override
+		public String getName() {
+			return "mRetrieveTaskListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			pdialog = new ProgressDialog(MailBody.this);
+			pdialog.setMessage(getResources().getString(R.string.loading));
+			pdialog.show();
+			pdialog.setCanceledOnTouchOutside(false);
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			pdialog.dismiss();
+			processResult(result);
+		}
+
+	};
+
+	private TaskListener mDelTaskListener = new TaskAdapter() {
+		private ProgressDialog pdialog;
+
+		@Override
+		public String getName() {
+			return "mDelTaskListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			pdialog = new ProgressDialog(MailBody.this);
+			pdialog.setMessage("正在删除...");
+			pdialog.show();
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			pdialog.dismiss();
+			delMail(result);
+		}
+
+	};
+
+	public static Intent createIntent(Context context) {
+		Intent intent = new Intent(LAUNCH_ACTION);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		return intent;
+	}
+
+	@Override
+	protected void _onCreate(Bundle savedInstanceState) {
+		super._onCreate(savedInstanceState);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+	}
+
+	private void doRetrieve() {
+		mRetrieveTask = new RetrieveTask();
+		String token = MyApplication.getToken();
+		String url = "http://bbs.seu.edu.cn/api/mail/get.json?type=" + type
+				+ "&id=" + num + "&token=" + token;
+		mRetrieveTask.setListener(mRetrieveTaskListener);
+		mRetrieveTask.execute(url);
+	}
+
+	private void doDel() {
+		mDelTask = new DelMailTask();
+		mDelTask.setListener(mDelTaskListener);
+		String url = "http://bbs.seu.edu.cn/api/mail/delete.json?type=0&id="
+				+ mail.getNum() + "&token=" + MyApplication.getToken();
+		mDelTask.execute(url);
+	}
+
+	private void processResult(TaskResult result) {
+
+		if (result == TaskResult.Failed) {
+			Toast.makeText(this, errorCause, Toast.LENGTH_SHORT).show();
+			return;
+		}
+		if (type == 0) {
+			authorView.setText(mail.getFrom());
+		} else if (type == 1) {
+			authorView.setText(mail.getFrom());
+		}
+		titleView.setText(mail.getTitle());
+		timeView.setText(mail.getDate());
+		contentView.setText(mail.getContent());
+		quoteView.setText(mail.getQuote());
+		if (!TextUtils.isEmpty(mail.getQuote())) {
+			quoterView.setText(mail.getFrom()+"来信提到:");
+		}else{
+			quoteView.setVisibility(View.GONE);
+			quoterView.setVisibility(View.GONE);
+		}
+	}
+	
+
+	private void initView() {
+		authorView = (TextView) this.findViewById(R.id.post_text_author);
+		timeView = (TextView) this.findViewById(R.id.post_text_time);
+		titleView = (TextView) this.findViewById(R.id.PostTitle);
+		contentView = (TextView)this.findViewById(R.id.post_text_content);
+		quoterView = (TextView) this.findViewById(R.id.post_text_quoter);
+		quoteView = (TextView) this.findViewById(R.id.post_text_quote);
+		this.findViewById(R.id.post_att_label).setVisibility(View.GONE);
+		this.findViewById(R.id.post_att_link).setVisibility(View.GONE);
+		this.findViewById(R.id.post_att).setVisibility(View.GONE);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		MobclickAgent.onResume(this);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(
+			com.actionbarsherlock.view.MenuItem item) {
+		if(null == mail){
+			return false;
+		}
+		Intent intent = new Intent();
+		Bundle bundle = new Bundle();
+		switch (item.getItemId()) {
+		case MENU_REPLY:
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.WriteMail");
+
+			bundle.putString(WriteMail.EXTRA_RECIEVER, mail.getFrom());
+			bundle.putString(WriteMail.EXTRA_REID, mail.getNum());
+			bundle.putString(WriteMail.EXTRA_TITLE, mail.getTitle());
+			bundle.putString(WriteMail.EXTRA_CONTENT, mail.getContent());
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		case MENU_AUTHOR:
+			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.ViewProfileActivity");
+			bundle.putString("userID", mail.getFrom());
+			intent.putExtras(bundle);
+			startActivity(intent);
+			break;
+		case MENU_DELETE:
+			AlertDialog.Builder ab = new AlertDialog.Builder(this);
+			ab.setTitle("提示");
+			ab.setMessage("确认删除？");
+			ab.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					doDel();
+				}
+			});
+			ab.setNegativeButton("取消", null);
+			ab.create();
+			ab.show();
+			break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+
+		menu.add(Menu.NONE, MENU_REPLY, Menu.NONE, "回复")
+				.setIcon(R.drawable.ic_menu_reply_inverse)
+				.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		menu.add(1, MENU_AUTHOR, Menu.NONE, "查看作者")
+				.setIcon(R.drawable.ic_menu_profile_inverse)
+				.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		menu.add(1, MENU_DELETE, Menu.NONE, "删除")
+				.setIcon(R.drawable.ic_menu_delete_inverse)
+				.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		return true;
+	}
+
+	private void delMail(TaskResult result) {
+		if (TaskResult.OK == result) {
+			Toast.makeText(this, "删除成功", Toast.LENGTH_SHORT).show();
+			Intent intent = getIntent();
+			int position = intent.getExtras().getInt("position");
+			Bundle bundle = new Bundle();
+			bundle.putInt("position", position);
+			intent.putExtras(bundle);
+			setResult(1, intent);
+			finish();
+			return;
+		} else {
+			Toast.makeText(this, "删除失败", Toast.LENGTH_SHORT).show();
+			return;
+		}
+	}
+
+	@Override
+	protected void onDestroy() {
+
+		if (mRetrieveTask != null
+				&& mRetrieveTask.getStatus() == GenericTask.Status.RUNNING) {
+			mRetrieveTask.cancel(true);
+		}
+		if (mDelTask != null
+				&& mDelTask.getStatus() == GenericTask.Status.RUNNING) {
+			mDelTask.cancel(true);
+		}
+		super.onDestroy();
+	}
+
+	private class RetrieveTask extends GenericTask {
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			//				mail = SBBSSupport.getMailContentAPI(params[0]);
+			try {
+				mail = MyApplication.bbsOp.getMail(params[0]);
+			} catch (HttpException e) {
+				e.printStackTrace();
+				errorCause = e.getMessage();
+				Log.e(TAG, errorCause);
+				return TaskResult.Failed;
+			}
+			return TaskResult.OK;
+		}
+	}
+
+	private class DelMailTask extends GenericTask {
+
+		private boolean result = false;
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			//				result = SBBSSupport.delMail(params[0]);
+			result = MyApplication.bbsOp.getBoolean(params[0]);
+			if (result) {
+				return TaskResult.OK;
+			} else {
+				return TaskResult.Failed;
+			}
+		}
+
+	}
+
+	@Override
+	protected void processUnLogin() {
+		Toast.makeText(this, "请登录后后使用", Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	protected void setup() {
+		setContentView(R.layout.singlepost);
+		Bundle bundle = getIntent().getExtras();
+		setTitle(bundle.getString("title"));
+		num = bundle.getString("num");
+		type = bundle.getInt("type");
+		initView();
+//		setupState();
+		registerForContextMenu(contentView);
+		doRetrieve();
+
+	}
+}

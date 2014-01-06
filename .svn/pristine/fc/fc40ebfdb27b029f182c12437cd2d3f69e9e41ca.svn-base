@@ -1,0 +1,104 @@
+package com.gfan.ui.Adapter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.yuchao.domain.Topic;
+import com.yuchao.ui.R;
+
+import android.content.Context;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+public class TopicListAdapter extends BaseAdapter {
+	private List<Topic> topicList;
+	private Context context;
+	private static final String TAG = "TopicListAdapter";
+
+
+	public TopicListAdapter( Context context) {
+		super();
+		this.topicList = new ArrayList<Topic>();
+		this.context = context;
+	}
+
+	@Override
+	public int getCount() {
+		return topicList.size();
+	}
+
+	@Override
+	public Object getItem(int position) {
+		return topicList.get(position);
+	}
+
+	@Override
+	public long getItemId(int position) {
+		return 0;
+	}
+
+	@Override
+	public View getView(int position, View convertView, ViewGroup parent) {
+		//设定这个条目的内容
+		Log.i("TopicListAdpater","正在加载第 "+position+" 个项目");
+		ViewHolder holder = null;
+		if(convertView == null){
+			LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			convertView =  inflater.inflate(R.layout.listview_topic_list_item, null);
+			holder = new ViewHolder();
+			holder.title = (TextView)convertView.findViewById(R.id.topic_title);
+			//holder.num = (TextView) convertView.findViewById(R.id.topic_num);
+			holder.authorView = (TextView) convertView.findViewById(R.id.topic_author);
+			holder.timeView = (TextView) convertView.findViewById(R.id.topic_time);
+			holder.readView = (TextView) convertView.findViewById(R.id.topic_popularity);
+			convertView.setTag(holder);
+		}else{
+			holder = (ViewHolder) convertView.getTag();
+		}
+		Topic topic = topicList.get(position);
+		//holder.num.setText(topic.getNum());
+		holder.authorView.setText(topic.getAuthor());
+		holder.timeView.setText(topic.getTime());
+		holder.readView.setText("("+topic.getPopularity()+")");
+		if(topicList.get(position).isOnTop()){
+			Log.i(TAG, topicList.get(position).getTitle());
+			holder.title.setText("[置底]"+topic.getTitle());
+		}else{
+			if(topic.getId()== topic.getReid()){
+				holder.title.setText("●".concat(topic.getTitle()));
+			}else{
+				holder.title.setText(topic.getTitle());
+			}
+		}
+		Log.i(TAG, "SBBSupport:topic unread is "+topic.isUnRead());
+		if(topic.isUnRead()){
+			convertView.setBackgroundColor(0xffFFFFFF);
+//			holder.title.getPaint().setFakeBoldText(true);
+		}else{
+			convertView.setBackgroundColor(0xffEEEEEE);
+//			holder.title.getPaint().setFakeBoldText(false);
+		}
+		return convertView;
+	}
+	
+	public void refresh(List<Topic> list){
+		this.topicList = list;
+		notifyDataSetChanged();
+	}
+	public void refresh(){
+		notifyDataSetChanged();
+	}
+ 
+ //定义静态类用于获取列表中每一个条目数据的更新
+ private static class ViewHolder {
+     //TextView num;
+     TextView authorView;
+     TextView timeView;
+	 TextView title;
+	 TextView readView;
+	}
+ }

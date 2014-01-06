@@ -1,0 +1,337 @@
+package com.yuchao.ui;
+
+import java.util.HashMap;
+import java.util.List;
+
+import com.gfan.http.HttpException;
+import com.gfan.sbbs.MyApplication;
+import com.gfan.task2.TaskResult;
+import com.gfan.ui.Adapter.MailAdapter;
+import com.gfan.ui.Adapter.TopicListAdapter;
+import com.gfan.ui.base.BaseActivity;
+import com.yuchao.domain.Mail;
+import com.yuchao.domain.Topic;
+import com.yuchao.task.GenericTask;
+import com.yuchao.task.TaskAdapter;
+import com.yuchao.task.TaskListener;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.Toast;
+
+public class NoticeActivity extends BaseActivity {
+
+	private ListView mailListView, atsListView, reListView;
+	private List<Mail> mailList;
+	private List<Topic> atsList, reList;
+	private HashMap<String, Object> noticeArray;
+	private TopicListAdapter atsAdapter, reAdapter;
+	private MailAdapter mailAdapter;
+	private GenericTask doRetrieveTask, doClearTask;
+	private String url, errorCause;
+	private boolean loading = true;
+	private static final String LAUNCH_ACTION = "com.yuchao.ui.NOTICE";
+	private static final String TAG = "NoticeActivity";
+
+	public static Intent createIntent(Context context) {
+		Intent intent = new Intent(LAUNCH_ACTION);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+		return intent;
+	}
+
+	private TaskListener mRetrieveTaskListener = new TaskAdapter() {
+		private ProgressDialog pdialog;
+
+		@Override
+		public String getName() {
+			return "mRetrieveTaskListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			pdialog = new ProgressDialog(NoticeActivity.this);
+			pdialog.setMessage(getResources().getString(R.string.loading));
+			pdialog.show();
+			pdialog.setCancelable(false);
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			pdialog.dismiss();
+			loading = false;
+			processNotice(result);
+		}
+
+	};
+
+	private TaskListener mClearTaskListener = new TaskAdapter() {
+
+		@Override
+		public String getName() {
+			return "mClearTaskListener";
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			clearNotification(result);
+			draw();
+		}
+	};
+
+	@Override
+	protected void _onCreate(Bundle savedInstanceState) {
+		super._onCreate(savedInstanceState);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+	}
+
+	private void initView() {
+		mailListView = (ListView) this.findViewById(R.id.mail_notice_list);
+		atsListView = (ListView) this.findViewById(R.id.ats_notice_list);
+		reListView = (ListView) this.findViewById(R.id.re_notice_list);
+		atsAdapter = new TopicListAdapter(this);
+		reAdapter = new TopicListAdapter(this);
+		atsListView.setAdapter(atsAdapter);
+		reListView.setAdapter(reAdapter);
+		mailAdapter = new MailAdapter(this);
+		mailListView.setAdapter(mailAdapter);
+	}
+
+	private void init() {
+		setTitle("新提醒");
+		mailListView
+				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+					@Override
+					public void onItemClick(AdapterView<?> arg0, View arg1,
+							int position, long arg3) {
+						Mail mail = (Mail) mailList.get(position);
+						Intent intent = new Intent(NoticeActivity.this,
+								MailBody.class);
+						Bundle bundle = new Bundle();
+						bundle.putString("title", mail.getTitle());
+						bundle.putString("num", mail.getNum());
+						bundle.putInt("type", 0);
+						intent.putExtras(bundle);
+						startActivity(intent);
+						mailList.remove(mail);
+						draw();
+					}
+				});
+		atsListView
+				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+					@Override
+					public void onItemClick(AdapterView<?> arg0, View arg1,
+							int position, long arg3) {
+						Topic topic = (Topic) atsList.get(position);
+						createTopicIntent(topic);
+						atsList.remove(topic);
+						draw();
+					}
+				});
+		reListView
+				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+					@Override
+					public void onItemClick(AdapterView<?> arg0, View arg1,
+							int position, long arg3) {
+						Topic topic = (Topic) reList.get(position);
+						createTopicIntent(topic);
+						reList.remove(topic);
+						draw();
+					}
+				});
+	}
+
+	private void createTopicIntent(Topic topic) {
+		Intent intent = new Intent(NoticeActivity.this,
+				SinglePostActivity.class);
+		Bundle bundle = new Bundle();
+		bundle.putString("boardID", topic.getTalkSpace());
+		bundle.putInt("id", topic.getId());
+		intent.putExtras(bundle);
+		startActivity(intent);
+	}
+
+	private void draw() {
+		mailAdapter.refresh(mailList);
+		atsAdapter.refresh(atsList);
+		reAdapter.refresh(reList);
+		drawView();
+	}
+
+	private void drawView() {
+		if (0 == mailList.size()) {
+			mailListView.setVisibility(View.GONE);
+		} else {
+			mailListView.setVisibility(View.VISIBLE);
+		}
+		if (0 == atsList.size()) {
+			atsListView.setVisibility(View.GONE);
+		} else {
+			atsListView.setVisibility(View.VISIBLE);
+		}
+		if (0 == reList.size()) {
+			reListView.setVisibility(View.GONE);
+		} else {
+			reListView.setVisibility(View.VISIBLE);
+		}
+	}
+
+	private void goTop() {
+		// listView.setSelection(1);
+	}
+
+	private void doRetrieve() {
+		loading = true;
+		doRetrieveTask = new RetrieveTask();
+		doRetrieveTask.setListener(mRetrieveTaskListener);
+		doRetrieveTask.execute(url);
+	}
+
+	private void doClear() {
+		doClearTask = new DoClearTask();
+		doClearTask.setListener(mClearTaskListener);
+		String url = "http://bbs.seu.edu.cn/api/clear_notifications.json?token="
+				+ MyApplication.getToken();
+		doClearTask.execute(url);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void processNotice(TaskResult result) {
+		if (TaskResult.Failed == result) {
+			Toast.makeText(this, errorCause, Toast.LENGTH_SHORT).show();
+			return;
+		}
+		if (TaskResult.NO_DATA == result) {
+			Toast.makeText(this, R.string.notice_no_data, Toast.LENGTH_SHORT)
+					.show();
+			return;
+		}
+		mailList = (List<Mail>) noticeArray.get("mail");
+		atsList = (List<Topic>) noticeArray.get("ats");
+		reList = (List<Topic>) noticeArray.get("reply");
+		if (mailList.size() == 0 && atsList.size() == 0 && reList.size() == 0) {
+			Toast.makeText(this, R.string.notice_no_data, Toast.LENGTH_SHORT)
+					.show();
+			return;
+		}
+		draw();
+		goTop();
+	}
+
+	private void clearNotification(TaskResult result) {
+		if (TaskResult.IO_ERROR == result) {
+			Toast.makeText(this, "网络错误", 1).show();
+			return;
+		} else if (TaskResult.Failed == result) {
+			Toast.makeText(this, "清除失败", Toast.LENGTH_SHORT).show();
+			return;
+		} else if (result == TaskResult.OK) {
+			Toast.makeText(this, "清除成功", Toast.LENGTH_SHORT).show();
+			if (null != mailList) {
+				mailList.clear();
+			}
+			if (null != atsList) {
+				atsList.clear();
+			}
+			if (null != reList) {
+				reList.clear();
+			}
+		}
+		draw();
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (null != doRetrieveTask
+				&& doRetrieveTask.getStatus() == GenericTask.Status.RUNNING) {
+			doRetrieveTask.cancel(true);
+		}
+		if (null != doClearTask
+				&& doClearTask.getStatus() == GenericTask.Status.RUNNING) {
+			doClearTask.cancel(true);
+		}
+		super.onDestroy();
+	}
+
+	private class DoClearTask extends GenericTask {
+
+		private boolean flag;
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			flag = MyApplication.bbsOp.getBoolean(params[0]);
+			if (flag) {
+				return TaskResult.OK;
+			} else {
+				return TaskResult.Failed;
+			}
+		}
+	}
+
+	private class RetrieveTask extends GenericTask {
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			// noticeArray = SBBSSupport.getNotifications(params[0]);
+			try {
+				noticeArray = MyApplication.bbsOp.getNoticeList(params[0]);
+			} catch (HttpException e) {
+				e.printStackTrace();
+				errorCause = e.getMessage();
+				Log.e(TAG, errorCause);
+				return TaskResult.Failed;
+			}
+
+			return TaskResult.OK;
+		}
+
+	}
+
+	@Override
+	protected void processUnLogin() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected void setup() {
+		LayoutInflater inflate = getLayoutInflater();
+		LinearLayout noticeaLayout = (LinearLayout) inflate.inflate(
+				R.layout.notice, null);
+		this.setContentView(noticeaLayout);
+		url = "http://bbs.seu.edu.cn/api/notifications.json?token=" + token;
+		this.initView();
+		this.init();
+		Bundle bundle = getIntent().getExtras();
+		if (null != bundle && bundle.containsKey("newMentions")) {
+			noticeArray = (HashMap<String, Object>) bundle
+					.getSerializable("newMentions");
+			processNotice(TaskResult.OK);
+
+		} else {
+			doRetrieve();
+		}
+
+	}
+}

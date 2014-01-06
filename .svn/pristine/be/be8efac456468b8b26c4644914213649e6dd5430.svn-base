@@ -1,0 +1,399 @@
+package com.gfan.sbbs;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
+
+import com.gfan.http.HttpClient;
+import com.gfan.http.HttpException;
+import com.gfan.http.Response;
+import com.gfan.http.ResponseException;
+import com.yuchao.domain.Board;
+import com.yuchao.domain.Mail;
+import com.yuchao.domain.Topic;
+import com.yuchao.domain.User;
+
+public class BBSOperator {
+
+	private HttpClient mClient;
+	private static final int IMAGE_MAX_SIZE = 1200;
+	private static final String TAG = "BBSOperator";
+
+	public BBSOperator() {
+		mClient = new HttpClient();
+	}
+
+	/**
+	 * 
+	 * @param name
+	 * @param passWord
+	 * @return
+	 * @throws HttpException
+	 */
+	public User doLogin(String name, String passWord) throws HttpException {
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("user", name));
+		params.add(new BasicNameValuePair("pass", passWord));
+		return User.parseLogin(getJsonSuccess(SBBSConstants.LOGIN_URL, params));
+	}
+
+	/**
+	 * 
+	 * @param url
+	 * @param board
+	 * @param title
+	 * @param content
+	 * @param reid
+	 * @return
+	 * @throws HttpException
+	 */
+
+	public Topic doPost(String url, String board, String title, String content,
+			String reid) throws HttpException {
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("board", board));
+		params.add(new BasicNameValuePair("title", title));
+		params.add(new BasicNameValuePair("content", content));
+		params.add(new BasicNameValuePair("reid", reid));
+		Log.i(TAG, "reid is " + reid);
+		return Topic.getTopic(getJsonSuccess(url, params));
+	}
+
+	/**
+	 * 
+	 * @param url
+	 * @param board
+	 * @param title
+	 * @param content
+	 * @param id
+	 * @return
+	 * @throws HttpException
+	 */
+	public Topic doEdit(String url, String board, String title, String content,
+			String id) throws HttpException {
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("board", board));
+		params.add(new BasicNameValuePair("title", title));
+		params.add(new BasicNameValuePair("content", content));
+		params.add(new BasicNameValuePair("id", id));
+		return Topic.getTopic(getJsonSuccess(url, params));
+	}
+
+	public boolean doPostMail(String url, String user, String title,
+			String content, String reid) {
+		List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+		params.add(new BasicNameValuePair("user", user));
+		params.add(new BasicNameValuePair("title", title));
+		params.add(new BasicNameValuePair("content", content));
+		params.add(new BasicNameValuePair("reid", reid));
+		try {
+			getJsonSuccess(url, params);
+		} catch (HttpException e) {
+			e.printStackTrace();
+			Log.e(TAG, e.getMessage());
+			return false;
+		}
+		return true;
+	}
+
+	public User getUserProfile(String url) throws HttpException {
+		return User.getUser(getJsonSuccess(url));
+	}
+
+	/**
+	 * get online friends, and maybe all friends
+	 * 
+	 * @param url
+	 * @return
+	 * @throws HttpException
+	 */
+	public List<User> getFriends(String url) throws HttpException {
+		return User.parseOnlineUser(getJsonSuccess(url));
+	}
+
+	/**
+	 * used for getHotList, threadList etc FIXME here,blacklist is not under
+	 * consideration
+	 * 
+	 * @param url
+	 * @return
+	 * @throws HttpException
+	 */
+	public List<Topic> getTopicList(String url) throws HttpException {
+		return Topic.parseTopicList(getJsonSuccess(url));
+	}
+
+	/**
+	 * used for get mailList
+	 * 
+	 * @param url
+	 * @return
+	 * @throws HttpException
+	 */
+	public List<Mail> getMailList(String url) throws HttpException {
+		return Mail.parseMailList(getJsonSuccess(url));
+	}
+
+	/**
+	 * used for get mail content
+	 * 
+	 * @param url
+	 * @return
+	 * @throws HttpException
+	 */
+	public Mail getMail(String url) throws HttpException {
+		return Mail.parseJson(getJsonSuccess(url));
+	}
+
+	/**
+	 * get new notice
+	 * 
+	 * @param url
+	 * @return
+	 * @throws HttpException
+	 */
+	public HashMap<String, Object> getNoticeList(String url)
+			throws HttpException {
+		HashMap<String, Object> noticeArray = new HashMap<String, Object>();
+		JSONObject obj;
+		obj = getJsonSuccess(url);
+		List<Mail> mailList = new ArrayList<Mail>();
+		List<Topic> atsList = new ArrayList<Topic>();
+		List<Topic> replyList = new ArrayList<Topic>();
+		try {
+			if (obj.has("mails")) {
+				JSONArray mailArray = obj.getJSONArray("mails");
+				mailList = Mail.parseNoticeMailList(mailArray);
+
+			}
+			if (obj.has("ats")) {
+				JSONArray atsArray = obj.getJSONArray("ats");
+				atsList = Topic.parseNoticeList(atsArray);
+
+			}
+			if (obj.has("replies")) {
+				JSONArray atsArray = obj.getJSONArray("replies");
+				replyList = Topic.parseNoticeList(atsArray);
+
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+			throw new HttpException(e.getMessage(), e);
+		}
+		noticeArray.put("mail", mailList);
+		noticeArray.put("ats", atsList);
+		noticeArray.put("reply", replyList);
+		return noticeArray;
+	}
+
+	/**
+	 * get all boards
+	 * 
+	 * @param url
+	 * @return
+	 * @throws HttpException
+	 */
+	public List<List<Board>> getAllBoards(String url) throws HttpException {
+		List<List<Board>> allBoardList = new ArrayList<List<Board>>();
+		try {
+			JSONObject obj = getJsonSuccess(url);
+			JSONArray groupArray = obj.getJSONArray("boards");
+			for (int i = 0, len = groupArray.length(); i < len; i++) {
+				JSONObject groupJson = groupArray.getJSONObject(i);
+				JSONArray boardsJson = groupJson.getJSONArray("boards");
+				List<Board> list = Board.parseBoardArray(boardsJson, false);
+				allBoardList.add(list);
+			}
+		} catch (JSONException e) {
+			throw new HttpException(e.getMessage(), e);
+		}
+		return allBoardList;
+	}
+
+	/**
+	 * used for add/delete events,just need a true/false result
+	 * 
+	 * @param url
+	 * @return
+	 */
+	public boolean getBoolean(String url) {
+		try {
+			getJsonSuccess(url);
+		} catch (HttpException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * get favList,sorted according to isHasRead
+	 * 
+	 * @param url
+	 * @return
+	 * @throws HttpException
+	 */
+	public List<Board> getFavList(String url) throws HttpException {
+		return Board.getSortedBoardList(getJsonSuccess(url));
+	}
+
+	/**
+	 * get board list,used for the search result or sections
+	 * 
+	 * @param url
+	 * @return
+	 * @throws HttpException
+	 */
+	public List<Board> getBoardList(String url) throws HttpException {
+		return Board.getBoardList(getJsonSuccess(url), false);
+	}
+
+	public Bitmap getBitmap(String url) throws HttpException {
+		InputStream inStream = get(url).asStream();
+		Bitmap bitmap;
+		try {
+			bitmap = BitmapFactory.decodeStream(inStream);
+		} catch (OutOfMemoryError e) {
+			Log.e(TAG, "OutofMemoryError");
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inSampleSize = 4;
+			bitmap = BitmapFactory.decodeStream(inStream, null, options);
+		}
+		try {
+			inStream.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new HttpException(e.getMessage(), e);
+		}
+		// return decodeFile(inStream);
+		return bitmap;
+	}
+
+	public Response get(String url) throws HttpException {
+		return mClient.httpRequest(url);
+	}
+
+	public Response post(String url, List<BasicNameValuePair> params)
+			throws HttpException {
+		return mClient.httpRequest(url, null, params);
+	}
+
+	public Response post(String url, File file, List<BasicNameValuePair> params)
+			throws HttpException {
+		return mClient.httpRequest(url, file, params);
+	}
+
+	public JSONObject getJson(String url, List<BasicNameValuePair> params)
+			throws HttpException {
+		return post(url, params).asJSONObject();
+	}
+
+	public JSONObject getJson(String url) throws HttpException {
+		return get(url).asJSONObject();
+	}
+
+	public JSONObject getJson(String url, File file,
+			List<BasicNameValuePair> params) throws HttpException {
+		return post(url, file, params).asJSONObject();
+	}
+
+	public JSONObject getJsonSuccess(String url, List<BasicNameValuePair> params)
+			throws HttpException {
+		boolean success = false;
+		JSONObject obj = getJson(url, params);
+		try {
+			success = obj.getBoolean("success");
+
+			if (success) {
+				return obj;
+			} else {
+				String error = obj.getString("error");
+				throw new HttpException(error);
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+			throw new HttpException(e.getMessage(), e);
+		}
+	}
+
+	public JSONObject getJsonSuccess(String url) throws HttpException {
+		boolean success = false;
+		JSONObject obj = getJson(url);
+		try {
+			success = obj.getBoolean("success");
+
+			if (success) {
+				return obj;
+			} else {
+				String error = obj.getString("error");
+				throw new HttpException(error);
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+			throw new HttpException(e.getMessage(), e);
+		}
+	}
+
+	public JSONObject getJsonSuccess(String url, File mFile,
+			List<BasicNameValuePair> params) throws HttpException {
+		boolean success = false;
+		Log.i(TAG, "mFile's path is " + mFile.getAbsolutePath());
+		JSONObject obj = getJson(url, mFile, params);
+		try {
+			success = obj.getBoolean("success");
+
+			if (success) {
+				return obj;
+			} else {
+				String error = obj.getString("error");
+				throw new HttpException(error);
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+			throw new HttpException(e.getMessage(), e);
+		}
+	}
+
+	private Bitmap decodeFile(InputStream inStream) {
+		Bitmap b = null;
+		try {
+			// Decode image size
+			BitmapFactory.Options o = new BitmapFactory.Options();
+			o.inJustDecodeBounds = true;
+
+			BitmapFactory.decodeStream(inStream, null, o);
+			// inStream.close();
+
+			int scale = 1;
+			if (o.outHeight > IMAGE_MAX_SIZE || o.outWidth > IMAGE_MAX_SIZE) {
+				scale = (int) Math.pow(
+						2,
+						(int) Math.round(Math.log(IMAGE_MAX_SIZE
+								/ (double) Math.max(o.outHeight, o.outWidth))
+								/ Math.log(0.5)));
+			}
+
+			// Decode with inSampleSize
+			BitmapFactory.Options o2 = new BitmapFactory.Options();
+			o2.inSampleSize = scale;
+			b = BitmapFactory.decodeStream(inStream, null, o2);
+			inStream.close();
+		} catch (IOException e) {
+		}
+		return b;
+	}
+
+}

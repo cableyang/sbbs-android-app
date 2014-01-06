@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<net.courage.tab.view.AnimationTabHost xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/tabhost"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <FrameLayout
+            android:id="@android:id/tabcontent"
+            android:layout_width="fill_parent"
+            android:layout_height="0.0dip"
+            android:layout_weight="1.0" />
+
+        <TabWidget
+            android:id="@android:id/tabs"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.0"
+            android:visibility="gone" />
+
+        <RadioGroup
+            android:id="@+id/main_radio"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@drawable/ltgray"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/home_radio"
+                style="@style/main_tab_bottom"
+                android:drawableTop="@drawable/icon_1"
+                android:tag="radio_button0"
+                android:text="@string/main_home" />
+
+            <RadioButton
+                android:id="@+id/fav_radio"
+                style="@style/main_tab_bottom"
+                android:drawableTop="@drawable/icon_4"
+                android:tag="radio_button3"
+                android:text="@string/main_at" />
+
+            <RadioButton
+                android:id="@+id/search_radio"
+                android:layout_height="55dp"
+                style="@style/main_tab_bottom"
+                android:drawableTop="@drawable/search"
+                android:tag="radio_button2"
+                android:text="@string/main_search" />
+
+            <RadioButton
+                android:id="@+id/mail_radio"
+                style="@style/main_tab_bottom"
+                android:drawableTop="@drawable/icon_2"
+                android:tag="radio_button1"
+                android:text="@string/main_message" />
+
+            <RadioButton
+                android:id="@+id/more_radio"
+                style="@style/main_tab_bottom"
+                android:drawableTop="@drawable/main_more_icon"
+                android:tag="radio_button4"
+                android:text="@string/menu_more" />
+        </RadioGroup>
+    </LinearLayout>
+
+</net.courage.tab.view.AnimationTabHost>

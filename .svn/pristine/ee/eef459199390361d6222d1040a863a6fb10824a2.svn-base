@@ -1,0 +1,243 @@
+package com.yuchao.ui;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import org.json.JSONException;
+
+import com.gfan.sbbs.MyApplication;
+import com.gfan.task2.TaskResult;
+import com.gfan.ui.Adapter.TopTenAdapter;
+import com.laohuai.appdemo.customui.ui.MyListView;
+import com.markupartist.android.widget.PullToRefreshListView;
+import com.yuchao.domain.Topic;
+import com.yuchao.task.GenericTask;
+import com.yuchao.task.TaskAdapter;
+import com.yuchao.task.TaskListener;
+import com.yuchao.util.BoardAdapter;
+import com.yuchao.util.SBBSSupport;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class SearchResultActivity extends Activity {
+	private String baseUrl;
+	private int start = 0;
+	private int headPosition = 1;
+	private boolean isFirstLoad = true;
+	private List<Topic> resultList;
+
+	private TextView moreBtn;
+	private View moreView;
+	private LinearLayout progressbar;
+	private GenericTask mSearchTask;
+	private TopTenAdapter myAdapter;
+	private MyListView mSearchView;
+	private MyApplication application;
+
+	private static final int LIMIT = 20;
+	public static final String TAG = "SearchResultActivity";
+
+	private TaskListener mSearchListener = new TaskAdapter() {
+		private ProgressDialog pdialog;
+
+		@Override
+		public String getName() {
+			return "mSearchListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			if (isFirstLoad) {
+				pdialog = new ProgressDialog(SearchResultActivity.this);
+				pdialog.setMessage("正在加载...");
+				pdialog.show();
+			}
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			if (null != pdialog) {
+				pdialog.dismiss();
+			}
+			mSearchView.onRefreshComplete();
+			if (getResult(result)) {
+				isFirstLoad = false;
+				draw();
+				goTop();
+			}
+		}
+	};
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		application = (MyApplication) getApplication();
+		this.setContentView(R.layout.listview_topic_list);
+		Bundle bundle = getIntent().getExtras();
+		initView();
+		if (null != bundle) {
+			baseUrl = bundle.getString("url");
+			if (application.isLogined()) {
+				baseUrl = baseUrl.concat("&token=" + application.getToken());
+			}
+		}
+		doRetrieve();
+	}
+
+	private void initView() {
+		TextView title = (TextView) this.findViewById(R.id.new_header_txt);
+		title.setText("全站搜索");
+		TextView new_btn = (TextView) this.findViewById(R.id.new_btn);
+		new_btn.setVisibility(TextView.INVISIBLE);
+		moreView = getLayoutInflater().inflate(R.layout.moredata, null);
+		moreBtn = (TextView) moreView.findViewById(R.id.load_more_btn);
+		progressbar = (LinearLayout) moreView.findViewById(R.id.more_progress);
+
+		mSearchView = (MyListView) this.findViewById(R.id.listview_allTopics);
+		myAdapter = new TopTenAdapter(this);
+		mSearchView.setAdapter(myAdapter);
+		mSearchView.addFooterView(moreView);
+		mSearchView.setonRefreshListener(new MyListView.OnRefreshListener() {
+
+			@Override
+			public void onRefresh() {
+				start = 0;
+				isFirstLoad = true;
+				resultList.clear();
+				doRetrieve();
+			}
+		});
+		mSearchView
+				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+					@Override
+					public void onItemClick(AdapterView<?> arg0, View arg1,
+							int position, long id) {
+						Log.i(TAG, "position is " + position);
+						Intent intent = new Intent(SearchResultActivity.this,
+								SinglePostActivity.class);
+						try {
+							Topic topic = getContextItemTopic(position);
+							if (null == topic) {
+								return;
+							}
+							Bundle bundle = new Bundle();
+							bundle.putString("author", topic.getAuthor());
+							bundle.putString("title", topic.getTalkSpace()
+									+ "版");
+							bundle.putString("boardID", topic.getTalkSpace());
+							bundle.putInt("id", topic.getId());
+							intent.putExtras(bundle);
+							startActivity(intent);
+						} catch (IndexOutOfBoundsException e) {
+							doLoadMore();
+						}
+					}
+				});
+		moreBtn.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				doLoadMore();
+			}
+		});
+	}
+
+	private void doRetrieve() {
+		mSearchTask = new SearchTask();
+		String url = getBaseUrl().concat("&start=" + start + "&limit=" + LIMIT);
+		mSearchTask.setListener(mSearchListener);
+		mSearchTask.execute(url);
+	}
+
+	private void doLoadMore() {
+		moreBtn.setVisibility(View.GONE);
+		progressbar.setVisibility(View.VISIBLE);
+		doRetrieve();
+	}
+
+	private void draw() {
+		myAdapter.refresh(resultList);
+	}
+
+	private void goTop() {
+		mSearchView.setSelection(headPosition);
+	}
+
+	public String getBaseUrl() {
+		return this.baseUrl;
+	}
+
+	public boolean getResult(TaskResult result) {
+		moreBtn.setVisibility(View.VISIBLE);
+		progressbar.setVisibility(View.GONE);
+		if (TaskResult.IO_ERROR == result) {
+			Toast.makeText(this, "网络错误", 1).show();
+			return false;
+		}
+		if (null == resultList || 0 == resultList.size()) {
+			Toast.makeText(this, "您搜索的结果不存在", 1).show();
+			return false;
+		}
+		return true;
+	}
+
+	private Topic getContextItemTopic(int position) {
+		if (position >= 1 && position <= myAdapter.getCount()) {
+			return (Topic) myAdapter.getItem(position - 1);
+		}
+		return null;
+	}
+
+	@Override
+	protected void onDestroy(){
+		if(mSearchTask != null && !mSearchTask.isCancelled()){
+			mSearchTask.cancel(true);
+		}
+		super.onDestroy();
+	}
+	private class SearchTask extends GenericTask {
+
+		@Override
+		protected TaskResult _doInBackground(String... arg0) {
+			try {
+				// 不考虑黑名单
+				BoardAdapter ba = SBBSSupport.getBoardTopicListAPI(arg0[0],
+						null);
+				List<Topic> list = ba.getTopicList();
+				if (isFirstLoad) {
+					headPosition = 1;
+					resultList = list;
+				} else {
+					headPosition = resultList.size();
+					resultList.addAll(list);
+				}
+				start += list.size();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			}
+			return TaskResult.OK;
+		}
+	}
+}

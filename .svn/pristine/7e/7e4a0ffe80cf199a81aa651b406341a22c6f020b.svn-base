@@ -1,0 +1,89 @@
+package com.gfan.ui.Adapter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+import com.gfan.bean.Mail;
+import com.yuchao.ui.R;
+
+public class MailAdapter extends BaseAdapter {
+
+	private Context context;
+	private List<Mail> mailList;
+	private LayoutInflater mInflater;
+	
+	public MailAdapter(Context context){
+		this.context = context;
+		this.mailList = new ArrayList<Mail>();
+	}
+	
+	public MailAdapter(LayoutInflater mInflater){
+		this.mailList = new ArrayList<Mail>();
+		this.mInflater = mInflater;
+	}
+	public void setList(List<Mail>list){
+		this.mailList = list;
+	}
+	
+	@Override
+	public int getCount() {
+		return mailList.size();
+	}
+
+	@Override
+	public Object getItem(int position) {
+		return mailList.get(position);
+	}
+
+	@Override
+	public long getItemId(int position) {
+		return 0;
+	}
+	public void refresh(List<Mail> list){
+		this.mailList = list;
+		notifyDataSetChanged();
+	}
+	public void refresh(){
+		notifyDataSetChanged();
+	}
+
+	@Override
+	public View getView(int position, View convertView, ViewGroup parent) {
+		ViewHolder holder = null;
+		Mail mail;
+		if(convertView == null){
+			if(null == mInflater){
+			mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);}
+			convertView =  mInflater.inflate(R.layout.mail_item, null);
+			holder = new ViewHolder();
+			holder.authorInfo = (TextView) convertView.findViewById(R.id.mail_authorinfo);
+			holder.titleInfo = (TextView) convertView.findViewById(R.id.mail_titleinfo);
+			convertView.setTag(holder);
+		}else{
+			holder = (ViewHolder) convertView.getTag();
+		}
+		mail = (Mail) mailList.get(position);
+		holder.authorInfo.setText("ю╢вт: "+ mail.getFrom());
+		holder.titleInfo.setText(mail.getTitle());
+		if(mail.isUnRead()){
+			convertView.setBackgroundColor(0xffFFFFFF);
+//			holder.titleInfo.getPaint().setFakeBoldText(true);
+		}else{
+			convertView.setBackgroundColor(0xffEEEEEE);
+//			holder.titleInfo.getPaint().setFakeBoldText(false);
+		}
+		return convertView;
+	}
+
+	private static class ViewHolder{
+		TextView authorInfo;
+		TextView titleInfo;
+	}
+}

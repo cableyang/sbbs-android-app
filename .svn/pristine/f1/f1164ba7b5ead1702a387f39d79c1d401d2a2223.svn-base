@@ -1,0 +1,75 @@
+package com.yuchao.domain;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 封装了每一条子版块条目
+ * @author yuchao
+ *
+ */
+
+public class Board {
+
+	   private String title;//中文名
+	   private String id;//英文名
+	   private String url;//链接
+	   private boolean isDirectory;
+	   private List<Board> childBoards;
+	   private boolean hasUnread;
+	public Board() {
+		isDirectory = false;
+	}
+	public Board(String id, String title) {
+		super();
+		this.title = title;
+		this.id = id;
+		isDirectory = false;
+		childBoards = new ArrayList<Board>();
+	}
+	
+	public String getTitle() {
+		return title;
+	}
+	public Board setTitle(String title) {
+		this.title = title;
+		return this;
+	}
+	public String getId() {
+		return id;
+	}
+	public Board setId(String id) {
+		this.id = id;
+		return this;
+	}
+	public String getUrl() {
+		return url;
+	}
+	public Board setUrl(String url) {
+		this.url = url;
+		return this;
+	}
+	public boolean isDirectory() {
+		return isDirectory;
+	}
+	public Board setDirectory(boolean isDirectory) {
+		this.isDirectory = isDirectory;
+		return this;
+	}
+	public void add(Board board){
+		this.childBoards.add(board);
+	}
+	public List<Board> getChildBoards() {
+		return childBoards;
+	}
+	public void setChildBoards(List<Board> childBoards) {
+		this.childBoards = childBoards;
+	}
+	public void setHasUnread(boolean hasUnread) {
+		this.hasUnread = hasUnread;
+	}
+	public boolean isHasUnread() {
+		return hasUnread;
+	}
+	   
+}

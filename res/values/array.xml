@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string-array name="check_intervals">  
+    <item>1</item>  
+    <item>3</item>  
+    <item>7</item>  
+    <item>15</item>
+    <item>30</item>
+</string-array>
+<string-array name="check_update_intervals">  
+    <item>1</item>
+    <item>10</item>  
+    <item>30</item>  
+    <item>60</item>  
+    <item>120</item>
+    <item>240</item>
+</string-array>
+<string-array name="mail_box">
+    <item>收件箱</item>
+    <item>发件箱</item>
+    <item>垃圾箱</item>
+</string-array>
+
+<string-array name="hot">
+    <item >全站十大</item>
+    <item>(0)本站系统分区十大</item>
+    <item>(1)东南大学分区十大</item>
+    <item>(2)电脑技术分区十大</item>
+    <item>(3)学术科学分区十大</item>
+    <item>(4)艺术文化分区十大</item>
+    <item>(5)乡情校谊分区十大</item>
+    <item>(6)休闲娱乐分区十大</item>
+    <item>(7)知性感性分区十大</item>
+    <item>(8)人文信息分区十大</item>
+    <item>(9)体坛风暴分区十大</item>
+    <item>(A)校务信箱分区十大</item>
+    <item>(B)社团群体分区十大</item>
+    </string-array>
+    <string-array name="page_select">
+        <item>全站热点</item>
+        <item>收藏夹</item>
+    </string-array>
+    <string-array name="page_select_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+</resources>

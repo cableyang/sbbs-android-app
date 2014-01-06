@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#e7e7e7"
+    android:orientation="vertical" >
+<!-- 
+    <include layout="@layout/new_header" />
+ -->
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:fillViewport="true" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="5dp"
+                android:paddingBottom="2dp" >
+
+                <TextView
+                    android:id="@+id/new_post_title_txt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingRight="5dp"
+                    android:singleLine="true"
+                    android:text="@string/new_post_title"
+                    android:textColor="@android:color/background_dark" />
+
+                <EditText
+                    android:id="@+id/newpostTitle"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/post_title"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/new_post_content_txt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="5dp"
+                android:text="@string/new_post_content"
+                android:textColor="@android:color/background_dark" />
+
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <EditText
+                android:id="@+id/newpostcontent"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_weight="1"
+                android:background="@null"
+                android:gravity="top"
+                android:hint="@string/post_content"
+                android:imeOptions="actionDone"
+                android:padding="10dp"
+                android:paddingBottom="2dp"
+                android:paddingTop="2dp" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

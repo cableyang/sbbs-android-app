@@ -1,0 +1,44 @@
+package com.yuchao.util;
+
+import java.util.List;
+
+import com.yuchao.domain.Topic;
+
+public class BoardAdapter {
+	private int count;
+	private List<Topic> topicList;
+	private boolean success;
+	private String error;
+	
+	public BoardAdapter(){
+		
+	}
+	public BoardAdapter(int count, List<Topic> topicList) {
+		this.setCount(count);
+		this.setTopicList(topicList);
+	}
+	public void setTopicList(List<Topic> topicList) {
+		this.topicList = topicList;
+	}
+	public List<Topic> getTopicList() {
+		return topicList;
+	}
+	public void setCount(int count) {
+		this.count = count;
+	}
+	public int getCount() {
+		return count;
+	}
+	public void setSuccess(boolean success) {
+		this.success = success;
+	}
+	public boolean isSuccess() {
+		return success;
+	}
+	public void setError(String error) {
+		this.error = error;
+	}
+	public String getError() {
+		return error;
+	}
+}

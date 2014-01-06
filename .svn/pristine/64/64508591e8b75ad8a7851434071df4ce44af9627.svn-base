@@ -1,0 +1,70 @@
+package com.gfan.ui.Adapter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.yuchao.domain.Attachment;
+import com.yuchao.ui.R;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+public class AttAdapter extends BaseAdapter {
+	private List<Attachment> attList;
+	private Context context;
+	
+	public AttAdapter(Context context){
+		this.context = context;
+		attList = new ArrayList<Attachment>();
+	}
+
+	@Override
+	public int getCount() {
+		return attList.size();
+	}
+
+	@Override
+	public Object getItem(int position) {
+		return attList.get(position);
+	}
+
+	@Override
+	public long getItemId(int arg0) {
+		return 0;
+	}
+
+	public void refresh(List<Attachment> list){
+		this.attList = list;
+		this.notifyDataSetChanged();
+	}
+	public void refresh(){
+		this.notifyDataSetChanged();
+	}
+	
+	@Override
+	public View getView(int position, View convertView, ViewGroup arg2) {
+		ViewHolder holder;
+		LayoutInflater inflater = (LayoutInflater) context
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		if(null == convertView){
+			convertView = inflater.inflate(R.layout.att_item, null);
+			holder = new ViewHolder();
+			holder.nameView = (TextView) convertView.findViewById(R.id.att_name);
+			convertView.setTag(holder);
+		}else{
+			holder = (ViewHolder) convertView.getTag();
+		}
+		Attachment att = (Attachment) getItem(position);
+		holder.nameView.setText(att.getFileName());
+		return convertView;
+	}
+	
+	private static class ViewHolder{
+		TextView nameView;
+	}
+
+}

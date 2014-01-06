@@ -1,0 +1,499 @@
+package com.yuchao.ui;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONException;
+
+import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.MenuItem;
+import com.gfan.sbbs.MyApplication;
+import com.gfan.task2.TaskResult;
+import com.gfan.ui.Adapter.BoardListAdapter;
+import com.gfan.ui.Adapter.FriendsListAdapter;
+import com.gfan.ui.Adapter.TopicListAdapter;
+import com.laohuai.appdemo.customui.ui.MyListView;
+import com.umeng.analytics.MobclickAgent;
+import com.yuchao.domain.Board;
+import com.yuchao.domain.Topic;
+import com.yuchao.domain.User;
+import com.yuchao.task.GenericTask;
+import com.yuchao.task.TaskAdapter;
+import com.yuchao.task.TaskListener;
+import com.yuchao.util.BoardAdapter;
+import com.yuchao.util.SBBSSupport;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class SearchResult extends SherlockActivity implements OnPageChangeListener {
+	private ViewPager viewPager;
+	private TextView userLabel, boardLabel, topicLabel;
+	private TextView[] labels;
+	private List<View> viewList;
+	private TextView moreBtn;
+	private View moreView;
+	private LinearLayout progressbar;
+
+	private LayoutInflater inflater;
+	private MyListView userListView, topicListView, boardListView;
+	private List<User> userList;
+	private List<Board> boardList;
+	private List<Topic> topicList;
+	private boolean isFirstLoad = true;
+	private int headPosition = 1, start = 0;
+	private String keyWord, searchUrl;
+	private TopicListAdapter topicAdapter;
+	private BoardListAdapter boardAdapter;
+	private FriendsListAdapter userAdapter;
+	private static final int LIMIT = 20;
+
+	private GenericTask mSearchUserTask, mSearchTopicTask, mSearchBoardTask;
+	private TaskListener mSearchBoardTaskListener = new TaskAdapter() {
+		private ProgressDialog pdialog;
+
+		@Override
+		public String getName() {
+			return "mSearchBoardTaskListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			pdialog = new ProgressDialog(SearchResult.this);
+			pdialog.setMessage("正在加载...");
+			pdialog.show();
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			pdialog.dismiss();
+			boardListView.onRefreshComplete();
+			if (TaskResult.OK == result) {
+				Log.i("SearchResult", "TaskResult.OK,boardList.size is "
+						+ boardList.size());
+				boardAdapter.refresh(boardList);
+			} else if (TaskResult.NO_DATA == result) {
+				Toast.makeText(SearchResult.this, "您搜索的版面不存在",
+						Toast.LENGTH_SHORT).show();
+			}
+		}
+	};
+	private TaskListener mSearchTopicListener = new TaskAdapter() {
+
+		private ProgressDialog pdialog;
+		@Override
+		public String getName() {
+			return "mSearchListener";
+		}
+
+		@Override
+		public void onPreExecute(GenericTask task) {
+			super.onPreExecute(task);
+			if(isFirstLoad){
+				pdialog = new ProgressDialog(SearchResult.this);
+				pdialog.setMessage("正在加载...");
+				pdialog.show();
+			}
+		}
+
+		@Override
+		public void onPostExecute(GenericTask task, TaskResult result) {
+			super.onPostExecute(task, result);
+			if(null != pdialog){
+				pdialog.dismiss();
+			}
+			topicListView.onRefreshComplete();
+			if (getResult(result)) {
+				Log.i("SearchResult", "load done");
+				isFirstLoad = false;
+				drawTopicView();
+				goTop();
+			}
+		}
+	};
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setTheme(com.actionbarsherlock.R.style.Theme_Sherlock_Light);
+		getSupportActionBar().setHomeButtonEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		setTitle("搜索结果");
+//		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		keyWord = getIntent().getExtras().getString("keyword");
+		searchUrl = "http://bbs.seu.edu.cn/api/search/topics.json?keys="
+				+ keyWord;
+		if (MyApplication.checkLogin()) {
+			searchUrl.concat("&token=" + MyApplication.getToken());
+		}
+		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		ViewGroup layout = (ViewGroup) inflater.inflate(R.layout.search_result,
+				null);
+		viewPager = (ViewPager) layout.findViewById(R.id.viewPager);
+		this.setContentView(layout);
+		initViewPager();
+		boardLabel = (TextView) layout.findViewById(R.id.search_board);
+		topicLabel = (TextView) layout.findViewById(R.id.search_topic);
+		userLabel = (TextView) layout.findViewById(R.id.search_user);
+		labels = new TextView[] { boardLabel, topicLabel, userLabel };
+		initView();
+		viewPager.setOnPageChangeListener(this);
+		doSearchBoard();
+	}
+
+	private void initViewPager() {
+		viewList = new ArrayList<View>();
+		View userView = inflater.inflate(R.layout.list_without_header, null);
+		View boardView = inflater.inflate(R.layout.list_without_header, null);
+		View topicView = inflater.inflate(R.layout.list_without_header, null);
+		viewList.add(boardView);
+		viewList.add(topicView);
+		viewList.add(userView);
+		viewPager.setAdapter(new MyAdapter());
+		boardListView = (MyListView) boardView.findViewById(R.id.my_list);
+		topicListView = (MyListView) topicView.findViewById(R.id.my_list);
+		userListView = (MyListView) userView.findViewById(R.id.my_list);
+		boardAdapter = new BoardListAdapter(this);
+		topicAdapter = new TopicListAdapter(this);
+		userAdapter = new FriendsListAdapter(this);
+		boardListView.setAdapter(boardAdapter);
+		userListView.setAdapter(userAdapter);
+		topicListView.setAdapter(topicAdapter);
+	}
+
+	private void initView() {
+		moreView = getLayoutInflater().inflate(R.layout.moredata, null);
+		moreBtn = (TextView) moreView.findViewById(R.id.load_more_btn);
+		progressbar = (LinearLayout) moreView.findViewById(R.id.more_progress);
+		topicListView.addFooterView(moreView);
+
+		moreBtn.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				doLoadMore();
+			}
+		});
+
+		userLabel.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				viewPager.setCurrentItem(2);
+			}
+		});
+		boardLabel.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				viewPager.setCurrentItem(0);
+			}
+		});
+		topicLabel.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				viewPager.setCurrentItem(1);
+			}
+		});
+		boardListView.setonRefreshListener(new MyListView.OnRefreshListener() {
+
+			@Override
+			public void onRefresh() {
+				doSearchBoard();
+			}
+		});
+		boardListView
+				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+					@Override
+					public void onItemClick(AdapterView<?> arg0, View arg1,
+							int position, long arg3) {
+						Board board = getContextItemBoard(position);
+						processBoard(board);
+					}
+				});
+		topicListView.setonRefreshListener(new MyListView.OnRefreshListener() {
+
+			@Override
+			public void onRefresh() {
+				start = 0;
+				isFirstLoad = true;
+				doTopicSearch();
+			}
+		});
+		topicListView
+				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+					@Override
+					public void onItemClick(AdapterView<?> arg0, View arg1,
+							int position, long id) {
+						Intent intent = new Intent(SearchResult.this,
+								SinglePostActivity.class);
+						try {
+							Topic topic = getContextItemTopic(position);
+							if (null == topic) {
+								return;
+							}
+							Bundle bundle = new Bundle();
+							bundle.putString("author", topic.getAuthor());
+							bundle.putString("title", topic.getTalkSpace()
+									+ "版");
+							bundle.putString("boardID", topic.getTalkSpace());
+							bundle.putInt("id", topic.getId());
+							intent.putExtras(bundle);
+							startActivity(intent);
+						} catch (IndexOutOfBoundsException e) {
+							doLoadMore();
+						}
+					}
+				});
+
+	}
+
+	private Board getContextItemBoard(int position) {
+		if (position > 0 && position <= boardAdapter.getCount()) {
+			return (Board) boardAdapter.getItem(position - 1);
+		}
+		return null;
+	}
+
+	private Topic getContextItemTopic(int position) {
+		if (position >= 1 && position <= topicAdapter.getCount()) {
+			return (Topic) topicAdapter.getItem(position - 1);
+		}
+		return null;
+	}
+
+	private void processBoard(Board board) {
+		if (null == board) {
+			return;
+		}
+		Intent intent = new Intent(SearchResult.this, TopicList.class);
+		Bundle bundle = new Bundle();
+		bundle.putString("boardID", board.getId());
+		intent.putExtras(bundle);
+		startActivity(intent);
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (null != mSearchBoardTask && !mSearchBoardTask.isCancelled()) {
+			mSearchBoardTask.cancel(true);
+		}
+		if (null != mSearchTopicTask && !mSearchTopicTask.isCancelled()) {
+			mSearchTopicTask.cancel(true);
+		}
+		super.onDestroy();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		MobclickAgent.onResume(this);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
+	}
+
+	private void doSearchBoard() {
+
+		String url = "http://bbs.seu.edu.cn/api/search/boards.json?name="
+				+ keyWord;
+		if (MyApplication.checkLogin()) {
+			url.concat("&token=" + MyApplication.getToken());
+		}
+		mSearchBoardTask = new SearchBoardTask();
+		mSearchBoardTask.setListener(mSearchBoardTaskListener);
+		mSearchBoardTask.execute(url);
+	}
+
+	private void doTopicSearch() {
+		String url = searchUrl.concat("&start=" + start + "&limit=" + LIMIT);
+		mSearchTopicTask = new SearchTopicTask();
+		mSearchTopicTask.setListener(mSearchTopicListener);
+		mSearchTopicTask.execute(url);
+	}
+
+	private void doLoadMore() {
+		moreBtn.setVisibility(View.GONE);
+		progressbar.setVisibility(View.VISIBLE);
+		doTopicSearch();
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()){
+		case android.R.id.home:
+			finish();
+		}
+		return true;
+	}
+	
+	public boolean getResult(TaskResult result) {
+		moreBtn.setVisibility(View.VISIBLE);
+		progressbar.setVisibility(View.GONE);
+		Log.i("SearchResult", "getResult " + result.toString());
+		if (TaskResult.IO_ERROR == result) {
+			Toast.makeText(this, "网络错误", 1).show();
+			return false;
+		}
+		if (null == topicList || 0 == topicList.size()) {
+			Toast.makeText(this, "您搜索的结果不存在", 1).show();
+			return false;
+		}
+		return true;
+	}
+
+	private void drawTopicView() {
+		topicAdapter.refresh(topicList);
+	}
+
+	private void goTop() {
+		topicListView.setSelection(headPosition);
+	}
+
+	private class MyAdapter extends PagerAdapter {
+		@Override
+		public int getCount() {
+			return viewList.size();
+		}
+
+		@Override
+		public boolean isViewFromObject(View arg0, Object arg1) {
+			return arg0 == (arg1);
+		}
+
+		@Override
+		public int getItemPosition(Object object) {
+			// TODO Auto-generated method stub
+			return super.getItemPosition(object);
+		}
+
+		@Override
+		public void destroyItem(View arg0, int arg1, Object arg2) {
+			((ViewPager) arg0).removeView(viewList.get(arg1));
+		}
+
+		@Override
+		public Object instantiateItem(View view, int position) {
+			Log.i("SearchResult", "instantiateItem,position is " + position);
+			((ViewPager) view).addView(viewList.get(position), 0);
+			return viewList.get(position);
+		}
+
+		@Override
+		public void restoreState(Parcelable arg0, ClassLoader arg1) {
+		}
+
+		@Override
+		public Parcelable saveState() {
+			return null;
+		}
+
+		@Override
+		public void startUpdate(View arg0) {
+
+		}
+
+		@Override
+		public void finishUpdate(View arg0) {
+
+		}
+
+	}
+
+	@Override
+	public void onPageScrollStateChanged(int arg0) {
+//		Toast.makeText(this, "arg0 is "+arg0, Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void onPageScrolled(int arg0, float arg1, int arg2) {
+
+	}
+
+	@Override
+	public void onPageSelected(int arg0) {
+		for (int i = 0, len = labels.length; i < len; i++) {
+			if (arg0 == i) {
+				labels[i].setBackgroundResource(R.color.gold);
+			} else {
+				labels[i].setBackgroundResource(R.color.aa_white);
+			}
+		}
+		if (1 == arg0 && null == topicList) {
+			doTopicSearch();
+		}
+	}
+
+	private class SearchBoardTask extends GenericTask {
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			try {
+				boardList = SBBSSupport.getFavListAPI(params[0]);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			}
+			if (null == boardList || boardList.size() == 0) {
+				return TaskResult.NO_DATA;
+			}
+			return TaskResult.OK;
+		}
+
+	}
+
+	private class SearchTopicTask extends GenericTask {
+
+		@Override
+		protected TaskResult _doInBackground(String... params) {
+			try {
+				// 不考虑黑名单
+				BoardAdapter ba = SBBSSupport.getBoardTopicListAPI(params[0],
+						null);
+				List<Topic> list = ba.getTopicList();
+				if (isFirstLoad) {
+					headPosition = 1;
+					topicList = list;
+				} else {
+					headPosition = topicList.size();
+					topicList.addAll(list);
+				}
+				start += list.size();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			} catch (JSONException e) {
+				e.printStackTrace();
+				return TaskResult.IO_ERROR;
+			}
+			return TaskResult.OK;
+		}
+
+	}
+}
