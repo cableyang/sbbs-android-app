@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.gfan.sbbs.ui.main"
     android:screenOrientation="landscape"
-    android:versionCode="20140101"
+    android:versionCode="20140106"
     android:versionName="@string/version_name" >
 
     <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="15"/>

@@ -25,9 +25,11 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.gfan.sbbs.bean.Attachment;
 import com.gfan.sbbs.file.utils.FileUtils;
+import com.gfan.sbbs.othercomponent.SBBSConstants;
 import com.gfan.sbbs.ui.Abstract.BaseActivity;
 import com.gfan.sbbs.ui.Adapter.AttachmentAdapter;
 import com.gfan.sbbs.utils.StringUtils;
+import com.gfan.sbbs.utils.images.ImageUtils;
 
 public class FileUploadActivity extends BaseActivity implements OnItemClickListener {
 	
@@ -132,6 +134,18 @@ public class FileUploadActivity extends BaseActivity implements OnItemClickListe
 		return dateFormat.format(date) + ".jpg";
 	}
 
+	/**
+	 * compress images before upload
+	 * @param url
+	 */
+	
+	private void compressImages(String url){
+		if(url.startsWith("file")){
+			url = url.substring(7);
+		}
+		ImageUtils.compressImages(url, SBBSConstants.IMAGE_QUALITY, this);
+	}
+	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
@@ -170,6 +184,8 @@ public class FileUploadActivity extends BaseActivity implements OnItemClickListe
 		boolean flag = FileUtils.getInstance().addToAttUrl(att.getUrl());
 		if(flag){
 			fileList.add(att);
+			Log.d(TAG, "before compress,image Url is "+att.getUrl());
+			compressImages(att.getUrl());
 		}
 		refresh(fileList);
 	}

@@ -14,4 +14,6 @@ public class SBBSConstants {
 	public static final String HOT_SECTIONS = "http://bbs.seu.edu.cn/api/hot/section.json";
 	public static final String BOARD_SECTIONS = "http://bbs.seu.edu.cn/api/sections.json";
 	public static final int CLIENT_TYPE_ANDROID = 1;
+	
+	public static final int IMAGE_QUALITY = 90;
 }
