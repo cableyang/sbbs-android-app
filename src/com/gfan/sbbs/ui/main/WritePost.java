@@ -135,11 +135,13 @@ public class WritePost extends BaseActivity {
 			if(hasDraft){
 				String title = MyApplication.getInstance().getmPreference().getString(Preferences.DRAFT_TITLE, "");
 				String content = MyApplication.getInstance().getmPreference().getString(Preferences.DRAFT_CONTENT, "");
+				reid = MyApplication.getInstance().getmPreference().getInt(Preferences.DRAFT_REID, 0);
 				titleView.setText(title);
 				contentView.setText(content);
-				SharedPreferences.Editor editor = MyApplication.getInstance().getmPreference().edit();
-				editor.putBoolean(Preferences.HAS_DRAFT, false);
-				editor.commit();
+//				SharedPreferences.Editor editor = MyApplication.getInstance().getmPreference().edit();
+//				editor.putBoolean(Preferences.HAS_DRAFT, false);
+//				editor.commit();
+				dropDraft();
 			}
 			break;
 		}
@@ -256,11 +258,26 @@ public class WritePost extends BaseActivity {
 		if(!TextUtils.isEmpty(content)){
 			editor.putString(Preferences.DRAFT_CONTENT, content);
 		}
-		if(!TextUtils.isGraphic(content+title)){
+		if(null != reid ){
+			editor.putInt(Preferences.DRAFT_REID, reid);
+		}
+		if(!TextUtils.isEmpty(content+title)){
 			editor.putBoolean(Preferences.HAS_DRAFT, true);
 		}else{
 			editor.putBoolean(Preferences.HAS_DRAFT, false);
 		}
+		editor.commit();
+	}
+	
+	/**
+	 * drop the draft by the users or after retrieve it from db
+	 */
+	private void dropDraft(){
+		SharedPreferences preferences = MyApplication.getInstance().getmPreference();
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putBoolean(Preferences.HAS_DRAFT, false);
+		editor.putString(Preferences.DRAFT_TITLE, "");
+		editor.putString(Preferences.DRAFT_CONTENT, "");
 		editor.commit();
 	}
 

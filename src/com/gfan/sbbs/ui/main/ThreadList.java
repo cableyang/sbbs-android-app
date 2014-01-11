@@ -18,7 +18,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,12 +55,14 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 	private static final int MENU_SHARE = Menu.FIRST + 3;
 	private static final int MENU_COPY = Menu.FIRST + 4;
 	private static final int MENU_SINGLE_SHARE = Menu.FIRST + 5;
-	private static final int MENU_ENTER_BOARD = 0;
+	private static final int MENU_ENTER_BOARD = Menu.FIRST + 6;
+	private static final int MENU_QUICK_REPLY = Menu.FIRST + 7;
 
-	private View moreView, qRView;
+	private View moreView;
+//	private View qRView;
 	private TextView moreBtn;
 	private LinearLayout progressbar;
-	private ImageView qRBtn;
+//	private ImageView qRBtn;
 	private EditText qREditText;
 	private List<Topic> threadList;
 	private TopReplyAdapter myAdapter;
@@ -139,11 +140,13 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 			if (result == TaskResult.Failed) {
 				Toast.makeText(ThreadList.this, errorCause, Toast.LENGTH_SHORT)
 						.show();
-			} else {
-				Toast.makeText(ThreadList.this, R.string.post_success, Toast.LENGTH_SHORT).show();
-				qREditText.setText("");
-				qREditText.clearFocus();
-			}
+			} 
+//			else {
+//				Toast.makeText(ThreadList.this, R.string.post_success, Toast.LENGTH_SHORT).show();
+//				qREditText.setText("");
+//				qREditText.clearFocus();
+//			}
+			
 		}
 	};
 
@@ -183,13 +186,13 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 		moreBtn = (TextView) moreView.findViewById(R.id.load_more_btn);
 		progressbar = (LinearLayout) moreView.findViewById(R.id.more_progress);
 		myListView.addFooterView(moreView);
-		this.findViewById(R.id.re_devider).setVisibility(View.VISIBLE);
+//		this.findViewById(R.id.re_devider).setVisibility(View.VISIBLE);
 		if (isLogined) {
 			baseUrl = baseUrl.concat("&token=" + token);
-			qRView = this.findViewById(R.id.quick_reply);
-			qRView.setVisibility(View.VISIBLE);
-			qREditText = (EditText) qRView.findViewById(R.id.quick_reply_txt);
-			qRBtn = (ImageView) qRView.findViewById(R.id.quick_reply_btn);
+//			qRView = this.findViewById(R.id.quick_reply);
+//			qRView.setVisibility(View.VISIBLE);
+//			qREditText = (EditText) qRView.findViewById(R.id.quick_reply_txt);
+//			qRBtn = (ImageView) qRView.findViewById(R.id.quick_reply_btn);
 		}
 		myAdapter = new TopReplyAdapter(this);
 		myListView.setAdapter(myAdapter);
@@ -214,6 +217,27 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 			}
 		});
 
+//		myListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+//			
+//			@Override
+//			public void onScrollStateChanged(AbsListView view, int scrollState) {
+//				switch(scrollState){
+//				case AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL:{
+//					qRView.setVisibility(View.GONE);
+//				}
+//				case AbsListView.OnScrollListener.SCROLL_STATE_IDLE:{
+//					qRView.setVisibility(View.VISIBLE);
+//				}
+//				}
+//			}
+//			
+//			@Override
+//			public void onScroll(AbsListView view, int firstVisibleItem,
+//					int visibleItemCount, int totalItemCount) {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//		});
 		myListView
 				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -230,16 +254,16 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 						}
 					}
 				});
-		if (!isLogined) {
-			return;
-		}
-		qRBtn.setOnClickListener(new View.OnClickListener() {
-
-			@Override
-			public void onClick(View view) {
-				doPost();
-			}
-		});
+//		if (!isLogined) {
+//			return;
+//		}
+//		qRBtn.setOnClickListener(new View.OnClickListener() {
+//
+//			@Override
+//			public void onClick(View view) {
+//				doPost();
+//			}
+//		});
 	}
 
 	@Override
@@ -322,7 +346,27 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 		}
 		return null;
 	}
+	
+	private void reply(Topic topic){
+		int id = topic.getId();
+		Bundle bundle = new Bundle();
+		String reTitle = topic.getTitle();
+		if (!topic.getTitle().startsWith("Re: ")) {
+			reTitle = "Re: ".concat(topic.getTitle());
+		}
+		bundle.putInt(PostHelper.EXTRA_TYPE, PostHelper.TYPE_REPLY);
+		bundle.putString(PostHelper.EXTRA_TITLE, reTitle);
+		bundle.putString(PostHelper.EXTRA_BOARD, boardID);
+		bundle.putInt(PostHelper.EXTRA_REID, id);
+		bundle.putString(PostHelper.EXTRA_CONTENT, topic.getContent());
+		Intent intent = new Intent(this, WritePost.class);
+		intent.putExtras(bundle);
+		startActivity(intent);
 
+	}
+
+
+	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterContextMenuInfo lm = (AdapterContextMenuInfo) item.getMenuInfo();
@@ -352,20 +396,7 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 		}
 		case MENU_REPLY:
 		{
-			int id = topic.getId();
-			Bundle bundle = new Bundle();
-			String reTitle = topic.getTitle();
-			if (!topic.getTitle().startsWith("Re: ")) {
-				reTitle = "Re: ".concat(topic.getTitle());
-			}
-			bundle.putInt(PostHelper.EXTRA_TYPE, PostHelper.TYPE_REPLY);
-			bundle.putString(PostHelper.EXTRA_TITLE, reTitle);
-			bundle.putString(PostHelper.EXTRA_BOARD, boardID);
-			bundle.putInt(PostHelper.EXTRA_REID, id);
-			bundle.putString(PostHelper.EXTRA_CONTENT, topic.getContent());
-			Intent intent = new Intent(this, WritePost.class);
-			intent.putExtras(bundle);
-			startActivity(intent);
+			reply(topic);
 			break;
 		}
 		case MENU_SINGLE_SHARE: {
@@ -374,7 +405,7 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 			String link = "http://bbs.seu.edu.cn/r/post/" + boardID + "/" + id;
 			intent.putExtra(Intent.EXTRA_SUBJECT, "");
 			intent.putExtra(Intent.EXTRA_TEXT,
-					"#虎踞龙蟠BBS#" + topic.getTitle() + "链接→:" + link);
+					getResources().getString(R.string.app_share_tag) + topic.getTitle() + getResources().getString(R.string.app_share_link) + link);
 			startActivity(Intent.createChooser(intent, getTitle()));
 			break;
 		}
@@ -384,8 +415,8 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 			// http://bbs.seu.edu.cn/r/topic/ID/170527
 			String link = "http://bbs.seu.edu.cn/r/topic/" + boardID + "/" + id;
 			intent.putExtra(Intent.EXTRA_SUBJECT, "");
-			intent.putExtra(Intent.EXTRA_TEXT, "#虎踞龙蟠BBS#：" + title
-					+ "链接→:" + link);
+			intent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.app_share_tag) + title
+					+ getResources().getString(R.string.app_share_link) + link);
 			startActivity(Intent.createChooser(intent, getTitle()));
 			break;
 		}
@@ -402,13 +433,13 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
-		menu.setHeaderTitle("菜单");
-		menu.add(0, MENU_AUTHORINFO, 0, "查看作者");
-		menu.add(0, MENU_MAIL_AUTHOR, 0, "寄信给作者");
-		menu.add(0, MENU_REPLY, 0, "回复");
-		menu.add(0, MENU_SINGLE_SHARE, 0, "分享");
-		menu.add(0, MENU_SHARE, 0, "主题分享");
-		menu.add(0, MENU_COPY, 0, "复制内容");
+		menu.setHeaderTitle(R.string.app_menu);
+		menu.add(0, MENU_AUTHORINFO, 0, R.string.thread_view_author);
+		menu.add(0, MENU_MAIL_AUTHOR, 0, R.string.thread_mail_author);
+		menu.add(0, MENU_REPLY, 0, R.string.thread_reply);
+		menu.add(0, MENU_SINGLE_SHARE, 0, R.string.thread_share);
+		menu.add(0, MENU_SHARE, 0, R.string.thread_share_all);
+		menu.add(0, MENU_COPY, 0, R.string.thread_share_all);
 	}
 
 	@Override
@@ -452,23 +483,37 @@ public class ThreadList extends BaseActivity implements OnLoadMoreDataListener {
 	public boolean onOptionsItemSelected(
 			com.actionbarsherlock.view.MenuItem item) {
 		switch (item.getItemId()) {
-		case MENU_ENTER_BOARD:
+		case MENU_ENTER_BOARD:{
 			Intent intent = new Intent(ThreadList.this, TopicList.class);
 			Bundle bundle = new Bundle();
 			bundle.putString("boardID", boardID);
 			intent.putExtras(bundle);
 			startActivity(intent);
-			break;
+			return true;
 		}
-		return super.onOptionsItemSelected(item);
+		case MENU_QUICK_REPLY :{
+			reply(getContextItemTopic(1));
+			return true;
+		}
+		default:		
+			return super.onOptionsItemSelected(item);
+		
+		}
 	}
 
+	
+	
 	@Override
 	public boolean onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu) {
 		menu.add(0, MENU_ENTER_BOARD, 0, "enter board")
 				.setIcon(R.drawable.ic_notification_post_read)
 				.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-		return super.onCreateOptionsMenu(menu);
+		
+		menu.add(Menu.NONE, MENU_QUICK_REPLY, Menu.NONE, "reply")
+		.setIcon(R.drawable.ic_menu_reply_inverse)
+		.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		
+		return true;
 	}
 
 	private class RetrieveTask extends GenericTask {

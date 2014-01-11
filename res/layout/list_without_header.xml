@@ -46,7 +46,7 @@
            android:layout_weight="1"
            android:paddingRight="5dp"
            android:maxLines="3"
-           android:hint="快速回复"
+           android:hint="@string/quick_reply_hint"
            />
         <ImageView 
            android:id="@+id/quick_reply_btn"

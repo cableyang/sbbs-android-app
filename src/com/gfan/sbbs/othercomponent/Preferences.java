@@ -25,5 +25,6 @@ public class Preferences {
 	public static final String DRAFT_TITLE = "pref_draft_title";
 	public static final String DRAFT_CONTENT = "pref_draft_content";
 	public static final String HAS_DRAFT = "pref_has_draft";
+	public static final String DRAFT_REID = "pref_draft_reid";
 	
 }
