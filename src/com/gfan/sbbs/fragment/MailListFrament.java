@@ -40,6 +40,7 @@ import com.gfan.sbbs.ui.Adapter.MailAdapter;
 import com.gfan.sbbs.ui.base.BaseViewModel;
 import com.gfan.sbbs.ui.base.HomeViewModel;
 import com.gfan.sbbs.ui.main.R;
+import com.gfan.sbbs.ui.main.WriteMail;
 import com.gfan.sbbs.utils.MyListView;
 import com.gfan.sbbs.utils.MyListView.OnLoadMoreDataListener;
 
@@ -167,8 +168,8 @@ public class MailListFrament extends SherlockFragment implements
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int position = item.getItemId();
 		if (position == MENU_NEW) {
-			Intent intent = new Intent();
-			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.WriteMail");
+			Intent intent = new Intent(getSherlockActivity(),WriteMail.class);
+//			intent.setClassName("com.yuchao.ui", "com.yuchao.ui.WriteMail");
 			startActivity(intent);
 			return true;
 		} else if (position > 0 && position < 4) {

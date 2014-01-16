@@ -133,6 +133,12 @@ public class WritePost extends BaseActivity {
 			setTitle(R.string.write_post);
 			boolean hasDraft = MyApplication.getInstance().getmPreference().getBoolean(Preferences.HAS_DRAFT, false);
 			if(hasDraft){
+				String board = MyApplication.getInstance().getmPreference().getString(Preferences.DRAFT_BOARD, "");
+				if(!TextUtils.isEmpty(board)){
+					if(!board.endsWith(boardID)){
+						return;
+					}
+				}
 				String title = MyApplication.getInstance().getmPreference().getString(Preferences.DRAFT_TITLE, "");
 				String content = MyApplication.getInstance().getmPreference().getString(Preferences.DRAFT_CONTENT, "");
 				reid = MyApplication.getInstance().getmPreference().getInt(Preferences.DRAFT_REID, 0);
@@ -265,6 +271,9 @@ public class WritePost extends BaseActivity {
 			editor.putBoolean(Preferences.HAS_DRAFT, true);
 		}else{
 			editor.putBoolean(Preferences.HAS_DRAFT, false);
+		}
+		if(null != boardID){
+			editor.putString(Preferences.DRAFT_BOARD, boardID);
 		}
 		editor.commit();
 	}

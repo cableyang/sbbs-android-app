@@ -52,6 +52,13 @@
     <string name="login_message">正在努力登录中……</string>
     <string name="login_success">登录成功</string>
 	
+    <!-- 注销 -->
+    <string name="user_logout">注销</string>
+    <string name="user_logout_confirm">确定注销？</string>
+    <string name="user_logout_positive">确定</string>
+    <string name="user_logout_negative">点错了！</string>
+    <string name="user_logout_indicate">正在注销……</string>
+    
     <!-- 帖子界面相关 -->
     <string name="post_edit">编辑</string>
     <string name="post_copy">复制</string>
@@ -90,6 +97,10 @@
     <string name="profile_user_add">添加好友</string>
     <string name="profile_user_mail">寄信</string>
     
+    <!-- 好友界面 -->
+    <string name="friends_view_profile">查看资料</string>
+    <string name="friends_mail">寄信</string>
+    <string name="friends_delete">删除好友</string>
     
     <!-- maintabs 底部文字 -->
     <string name="menu_hot">全站热点</string>
@@ -105,6 +116,10 @@
 
     <!-- notification related -->
     <string name="notice_title">新提醒</string>
+    <string name="notice_clear">清除</string>
+    <string name="notice_clear_network_err">网络错误</string>
+    <string name="notice_clear_failed">清除失败</string>
+    <string name="notice_clear_ok">清除成功</string>
     
     <!-- board list view mode -->
     <string name="board_classic">经典模式</string>
@@ -148,9 +163,6 @@
     <string name="fav_board">版面</string>
     <string name="fav_dir">目录</string>
 
-
-    <!-- notification related -->
-    <string name="notice_clear">清除</string>
     
     <!-- 发表文章界面 -->
     <string name="new_post_title">标题</string>
@@ -183,6 +195,7 @@
     <string name="mail_box_switch">切换信箱</string>
     <string name="mail_current_box_notice">当前正在此信箱</string>
     <string name="mail_from">来自</string>
+   
 
     <!-- 设置相关 -->
     <string name="pref_title">设置</string>

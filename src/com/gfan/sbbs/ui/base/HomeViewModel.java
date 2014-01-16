@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 
 import com.gfan.sbbs.othercomponent.MyApplication;
+import com.gfan.sbbs.ui.main.LoginActivity;
+import com.gfan.sbbs.ui.main.R;
 
 
 public class HomeViewModel extends BaseViewModel {
@@ -31,16 +33,16 @@ public class HomeViewModel extends BaseViewModel {
 	
 	public void doLogout(final Activity activity){
 		AlertDialog.Builder ab = new AlertDialog.Builder(activity);
-		ab.setTitle("��ʾ");
+		ab.setTitle(R.string.user_logout);
 		
-		ab.setMessage("��ȷ��Ҫע��");
-		ab.setNegativeButton("ȡ��", null);
-		ab.setPositiveButton("ȷ��",new DialogInterface.OnClickListener() {
+		ab.setMessage(R.string.user_logout_confirm);
+		ab.setNegativeButton(R.string.user_logout_negative, null);
+		ab.setPositiveButton(R.string.user_logout_positive,new DialogInterface.OnClickListener() {
 			
 			@Override
 			public void onClick(DialogInterface arg0, int arg1) {
 				final ProgressDialog pdialog = new ProgressDialog(activity);
-				pdialog.setMessage("����ע��...");
+				pdialog.setMessage(activity.getResources().getString(R.string.user_logout_indicate));
 				pdialog.show();
 				Thread td = new Thread(){
 
@@ -48,8 +50,7 @@ public class HomeViewModel extends BaseViewModel {
 					public void run() {
 						pdialog.dismiss();
 						MyApplication.mPreference.edit().clear().commit();
-						Intent intent = new Intent();
-						intent.setClassName("com.yuchao.ui", "com.yuchao.ui.LoginActivity");
+						Intent intent = new Intent(activity,LoginActivity.class);
 						activity.startActivity(intent);
 						activity.finish();
 					}};

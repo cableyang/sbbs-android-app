@@ -244,13 +244,13 @@ public class NoticeActivity extends BaseActivity {
 
 	private void clearNotification(TaskResult result) {
 		if (TaskResult.IO_ERROR == result) {
-			Toast.makeText(this, "�������", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, R.string.notice_clear_network_err, Toast.LENGTH_SHORT).show();
 			return;
 		} else if (TaskResult.Failed == result) {
-			Toast.makeText(this, "���ʧ��", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, R.string.notice_clear_failed, Toast.LENGTH_SHORT).show();
 			return;
 		} else if (result == TaskResult.OK) {
-			Toast.makeText(this, "���ɹ�", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, R.string.notice_clear_ok, Toast.LENGTH_SHORT).show();
 			clearNotification();
 		}
 		draw();

@@ -304,13 +304,13 @@ public class FriendListFragment extends SherlockFragment implements
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 
-			menu.add(Menu.NONE, MENU_VIEWPROFILE, Menu.NONE, "�鿴����")
+			menu.add(Menu.NONE, MENU_VIEWPROFILE, Menu.NONE, R.string.friends_view_profile)
 					.setIcon(R.drawable.ic_menu_profile_inverse)
 					.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-			menu.add(Menu.NONE, MENU_MAIL, Menu.NONE, "վ����")
+			menu.add(Menu.NONE, MENU_MAIL, Menu.NONE, R.string.friends_mail)
 					.setIcon(R.drawable.ic_compose_inverse)
 					.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-			menu.add(Menu.NONE, MENU_DELETE, Menu.NONE, "ɾ�����")
+			menu.add(Menu.NONE, MENU_DELETE, Menu.NONE, R.string.friends_delete)
 					.setIcon(R.drawable.ic_menu_delete_inverse)
 					.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
 			return true;
