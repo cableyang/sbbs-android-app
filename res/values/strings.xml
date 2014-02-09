@@ -5,25 +5,12 @@
     <string name="app_menu">菜单</string>
     <string name="app_share_tag">#虎踞龙蟠BBS#</string>
     <string name="app_share_link">链接：</string>
-
-    
+    <string name="image_descr">图片</string>
     <string name="app_title">虎踞龙蟠BBS Android客户端</string>
     <string name="version_name">1.4.3</string>
     <string name="version_code">20140209</string>
     <string name="app_name">虎踞龙蟠BBS</string>
-    <string name="post_title">标题</string>
-    <string name="post_content">内容</string>
-    <string name="post_send">发表</string>
-    <string name="post_cancel">取消</string>
-    <string name="post_page_title">发表帖子</string>
-    <!-- Post and mail bottom bar -->
-    <string name="post_footer_share">分享</string>
-    <string name="post_footer_reply">回复</string>
-    <string name="post_footer_author">作者</string>
-    <string name="post_footer_mail">寄信</string>
-    <string name="post_footer_more">更多</string>
-    <string name="post_forward">转载</string>
-    <string name="profile_footer_add">加为好友</string>
+    
 
     <!-- 帖子界面 -->
     <string name="reload_post">加载失败，是否重新加载?</string>
@@ -35,9 +22,6 @@
     <string name="search_no_data">无数据，搜点别的吧</string>
     <string name="search_result_title">虎踞龙蟠搜索</string>
 
-    <!-- post related -->
-    <string name="post_att">附件</string>
-    <!-- end Here -->
     <!-- notice bar -->
     <string name="mail_notice">新邮件</string>
     <string name="ats_notice">爱特我的消息</string>
@@ -75,8 +59,14 @@
     <string name="thread_share">分享本帖</string>
     <string name="thread_share_all">同主题分享</string>
     <string name="thread_copy">复制内容</string>
+    <string name="post_att">附件</string>
     
-    <!-- user related -->
+    <!-- 用户相关 -->
+    <string name="user_profile">个人资料</string>
+    <string name="profile_mail">寄信</string>
+    <string name="profile_add">加为好友</string>
+    <string name="del_friends_success">删除成功</string>
+    <string name="del_friends_failed">删除失败</string>
     <string name="profile_send_mail">寄信</string>
     <string name="profile_alive_number">生命力</string>
     <string name="profile_login_count">登录次数</string>
@@ -129,7 +119,7 @@
     <string name="board_digest">文摘区</string>
     <string name="board_mark">保留区</string>
 
-    <!-- about -->
+    <!--关于界面 -->
     <string name="version_title">版本号: </string>
     <string name="contact_title">联系我</string>
     <string name="contact">>><a href="http://bbs.seu.edu.cn/bbsqry.php?userid=gfan\">gfan/</a>
@@ -137,9 +127,10 @@
     <string name="links_title">相关链接</string>
     <string name="links">东南大学虎踞龙蟠BBS: http://bbs.seu.edu.cn\n>>虎踞龙蟠手机客户端: http://bbs.seu.edu.cn/client\n>>项目主页： http://code.google.com/p/sbbs-android-app/</string>
 
-    <!-- update app -->
+    <!-- 升级app -->
     <string name="update_app_success">恭喜你已升级为最新程序！</string>
     <string name="update_app_error">升级失败，请重新下载！</string>
+  
     <!-- 登录提醒 -->
     <string name="unlogin_notice">请登录</string>
     
@@ -259,12 +250,7 @@
     <string name="in_box">收件箱</string>
     <string name="send_box">发件箱</string>
     <string name="trash_box">垃圾箱</string>
-    <!-- 用户相关 -->
-    <string name="user_profile">个人资料</string>
-    <string name="profile_mail">寄信</string>
-    <string name="profile_add">加为好友</string>
-    <string name="del_friends_success">删除成功</string>
-    <string name="del_friends_failed">删除失败</string>
+    
 
     <!-- alert dialog -->
     <string name="alert_title">提示</string>
@@ -274,9 +260,6 @@
     <string name="tips_title">操作提示</string>
     <string name="tips">>>点击左上角Logo展开功能菜单，返回键退出。\n>>十大、分区十大等页面不会主动加载，请使用下拉刷新手动加载。\n>>同主题阅读时点击帖子
         条目进入单帖模式，可查看图标，快速回复等。\n>>如果找不到您要的功能请长按条目或按菜单键。\n>>任何意见或者建议，请联系我 :)</string>
-
-    <!-- others -->
-    <string name="image_descr">图片</string>
     
     <!-- 分区相关 -->
     <string name="section_0">(0)本站系统</string>

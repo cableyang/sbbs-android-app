@@ -271,6 +271,7 @@ public class WritePost extends BaseActivity {
 		}
 		if(!TextUtils.isEmpty(content+title)){
 			editor.putBoolean(Preferences.HAS_DRAFT, true);
+			Toast.makeText(this, R.string.save_draft, Toast.LENGTH_SHORT).show();
 		}else{
 			editor.putBoolean(Preferences.HAS_DRAFT, false);
 		}
@@ -341,7 +342,6 @@ public class WritePost extends BaseActivity {
 		switch (item.getItemId()) {
 		case android.R.id.home:{
 			saveDraft();
-			Toast.makeText(this, R.string.save_draft, Toast.LENGTH_SHORT).show();
 			finish();
 			break;
 		}
