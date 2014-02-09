@@ -8,8 +8,8 @@
 
     
     <string name="app_title">虎踞龙蟠BBS Android客户端</string>
-    <string name="version_name">1.4.3_v2</string>
-    <string name="version_code">20140102</string>
+    <string name="version_name">1.4.3</string>
+    <string name="version_code">20140209</string>
     <string name="app_name">虎踞龙蟠BBS</string>
     <string name="post_title">标题</string>
     <string name="post_content">内容</string>

@@ -136,6 +136,8 @@ public class WritePost extends BaseActivity {
 				String board = MyApplication.getInstance().getmPreference().getString(Preferences.DRAFT_BOARD, "");
 				if(!TextUtils.isEmpty(board)){
 					if(!board.endsWith(boardID)){
+						//if the board the user is posting is not the board stored in the configuration file,then drop the draft directly
+						dropDraft();
 						return;
 					}
 				}
@@ -250,7 +252,7 @@ public class WritePost extends BaseActivity {
 	}
 
 	/**
-	 * save draft when send topic failed 
+	 * save draft automatically when send topic failed 
 	 */
 	private void saveDraft() {
 		SharedPreferences preferences =  MyApplication.getInstance().getmPreference();
@@ -357,11 +359,11 @@ public class WritePost extends BaseActivity {
 		}
 		case MENU_ANONYMOUS: {
 			if (isAnonymous) {
-				isAnonymous = false;
+				isAnonymous = !isAnonymous;
 				item.setIcon(R.drawable.ic_toolbar_anonymous);
 				Toast.makeText(this, R.string.anonymous_status_off, Toast.LENGTH_SHORT).show();
 			} else {
-				isAnonymous = true;
+				isAnonymous = !isAnonymous;
 				item.setIcon(R.drawable.ic_toolbar_unanonymous);
 				Toast.makeText(this, R.string.anonymous_status_on, Toast.LENGTH_SHORT).show();
 			}
