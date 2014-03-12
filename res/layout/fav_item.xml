@@ -7,11 +7,7 @@
         android:id="@+id/fav_item"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:paddingLeft="2dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:paddingRight="2dp"
+        style="@style/FavItemText.Normal"
         android:drawableRight="@drawable/arrow_1">
         
     </TextView>

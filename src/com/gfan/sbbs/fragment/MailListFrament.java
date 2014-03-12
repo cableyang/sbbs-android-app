@@ -43,6 +43,7 @@ import com.gfan.sbbs.ui.main.R;
 import com.gfan.sbbs.ui.main.WriteMail;
 import com.gfan.sbbs.utils.MyListView;
 import com.gfan.sbbs.utils.MyListView.OnLoadMoreDataListener;
+import com.umeng.analytics.MobclickAgent;
 
 public class MailListFrament extends SherlockFragment implements
 		BaseViewModel.OnViewModelChangObserver, OnLoadMoreDataListener {
@@ -124,6 +125,22 @@ public class MailListFrament extends SherlockFragment implements
 		trashList = new ArrayList<Mail>();
 		Log.i(TAG, "OnCreate");
 	}
+
+	
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		MobclickAgent.onPageEnd("MailListFragment");
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		MobclickAgent.onPageStart("MailListFragment");
+	}
+
+
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -329,11 +346,29 @@ public class MailListFrament extends SherlockFragment implements
 		setStart(nowBox, start);
 		start = getStart(box);
 		nowBox = box;
+		setActivityTitle(nowBox);
 		if (0 == mailList.size()) {
 			isFirstLoad = true;
 			doRetrieve();
 		} else {
 			draw();
+		}
+	}
+	
+	private void setActivityTitle(int box){
+		switch(box){
+		case MAILBOX:
+			getSherlockActivity().setTitle(R.string.menu_mail);
+			break;
+		case SENDBOX:
+			getSherlockActivity().setTitle(R.string.menu_sendbox);
+			break;
+		case DELETEBOX:
+			getSherlockActivity().setTitle(R.string.menu_trashbox);
+			break;
+		default:
+			getSherlockActivity().setTitle(R.string.menu_mail);
+				
 		}
 	}
 
@@ -377,6 +412,7 @@ public class MailListFrament extends SherlockFragment implements
 
 	private void draw() {
 		myAdapter.refresh(mailList);
+		setActivityTitle(nowBox);
 	}
 
 	private void goTop() {

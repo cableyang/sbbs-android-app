@@ -6,6 +6,7 @@ import java.net.URLEncoder;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.view.ViewPager;
@@ -38,7 +39,6 @@ import com.gfan.sbbs.ui.base.BaseViewModel.OnTabIndexChangeListener;
 import com.korovyansk.android.slideout.SlideoutHelper;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.umeng.analytics.MobclickAgent;
-import com.umeng.update.UmengDownloadListener;
 import com.umeng.update.UmengUpdateAgent;
 
 public class Home extends SherlockFragmentActivity implements
@@ -53,10 +53,12 @@ public class Home extends SherlockFragmentActivity implements
 	private MyApplication application;
 
 	private static final String TAG = "HomeActivity";
+	
 
 	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+//		com.umeng.common.Log.LOG = true;
 		if (!MyApplication.isNightMode) {
 			setTheme(com.actionbarsherlock.R.style.Theme_Sherlock_Light);
 		}else{
@@ -66,7 +68,6 @@ public class Home extends SherlockFragmentActivity implements
 		this.setContentView(R.layout.home);
 		application = (MyApplication) getApplication();
 		
-		MobclickAgent.onError(this);// error feedback
 		schedule();// background data check
 		createShortCut();
 		manageAppUpdate();
@@ -308,28 +309,14 @@ public class Home extends SherlockFragmentActivity implements
 	 */
 	private void manageAppUpdate() {
 		MyApplication application = (MyApplication) getApplication();
-		if (application.isAutoUpdate()) {
-			long updateTime = ((long) application.getUpdateInterval()) * 1000
-					* 60 * 60 * 24;
-			UmengUpdateAgent.update(this, updateTime);
-			Log.i("MyApplication",
-					"update Interval is " + application.getUpdateInterval());
-		}
 		UmengUpdateAgent.setUpdateOnlyWifi(application.isUpdate_wifi());
-		UmengUpdateAgent.setOnDownloadListener(new UmengDownloadListener() {
-
-			@Override
-			public void OnDownloadEnd(int result) {
-				if (1 == result) {
-					Toast.makeText(Home.this, R.string.update_app_success, Toast.LENGTH_SHORT)
-							.show();
-				} else {
-					Toast.makeText(Home.this, R.string.update_app_error, Toast.LENGTH_SHORT)
-							.show();
-				}
-			}
-		});
-
+//		UmengUpdateAgent.setUpdateOnlyWifi(false);
+		SharedPreferences preferences = application.getmPreference();
+		boolean isAutoUpdate = preferences.getBoolean(Preferences.AUTOUPDATE, true);
+//		Log.i(TAG, "isAutoUpdate is "+isAutoUpdate);
+		if (isAutoUpdate) {
+			UmengUpdateAgent.update(this);
+		}
 	}
 
 	@Override

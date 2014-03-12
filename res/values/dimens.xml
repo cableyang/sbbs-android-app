@@ -16,10 +16,14 @@
     <dimen name="new_blog_size">70.0dip</dimen>
     
     
-        
+    <dimen name="thread_title">12sp</dimen>
+    <dimen name="thread_content">14sp</dimen>
+    <dimen name="thread_author">12sp</dimen>
+    
+    
     <dimen name="rbm_menu_width">250dp</dimen>
     <dimen name="rbm_item_padding_topbottom">16dp</dimen>
-    <dimen name="rbm_item_padding_leftright">8dp</dimen>
+    <dimen name="rbm_item_padding_leftright">20dp</dimen>
     <dimen name="rbm_item_image_height">24dp</dimen>
     <dimen name="rbm_item_image_width">24dp</dimen>  
     <dimen name="rbm_item_text_size">16sp</dimen>

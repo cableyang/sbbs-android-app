@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 <!-- from fanfoudroid -->
     <style name="main_tab_bottom">
         <item name="android:textSize">@dimen/bottom_tab_font_size</item>
@@ -36,6 +36,102 @@
 	        <style name="LinkText" parent="@android:style/TextAppearance">
         <item name="android:textColor">#ff0066cc</item>
     </style>
+    
+	        <style name="AuthorText.Normal" parent="@android:style/TextAppearance">
+	            <item name="android:textColor">#ff0066cc</item>
+	            <item name="android:typeface">serif</item>
+	            <item name="android:textSize">12.0sp</item>
+	        </style>
+	        
+	        <style name="AuthorText.Large" parent="@style/AuthorText.Normal">
+	            <item name="android:textSize">14.0sp</item>
+	        </style>
+	        
+	        <style name="AuthorText.Small" parent="@style/AuthorText.Normal">
+	            <item name="android:textSize">10.0sp</item>
+	        </style>
+	        
+	        <style name="TimeText.Normal" parent="@android:style/TextAppearance">
+	            <item name="android:typeface">serif</item>
+	            <item name="android:textSize">12.0sp</item>
+	            <item name="android:textColor">@android:color/darker_gray</item>
+	        </style>
+	        
+	        <style name="TimeText.Small" parent="@style/TimeText.Normal">
+	            <item name="android:textSize">10.sp</item>
+	        </style>
+	        
+	        <style name="TimeText.Large" parent="@style/TimeText.Normal">
+	            <item name="android:textSize">14sp</item>
+	        </style>
+	        
+	        <style name="TitleText.Normal" parent="@android:style/TextAppearance">
+	            <item name="android:typeface">serif</item>
+	            <item name="android:textSize">12.0sp</item>
+	        </style>
+	        
+	        <style name="TitleText.Small" parent="@style/TitleText.Normal">
+	            <item name="android:textSize">10.0sp</item>
+	        </style>
+	        
+	        <style name="TitleText.Large" parent="@style/TitleText.Normal">
+	            <item name="android:textSize">14sp</item>
+	        </style>
+	        
+	        <style name="BodyText.Normal" parent="@android:style/TextAppearance">
+	            <item name="android:typeface">serif</item>
+	            <item name="android:textSize">14.0sp</item>
+	            <item name="android:paddingLeft">2.0dp</item>
+	            <item name="android:paddingTop">5.0dp</item>
+	            <item name="android:paddingBottom">5.0dp</item>
+	        </style>
+	        
+	        <style name="BodyText.Small" parent="@style/BodyText.Normal">
+	            <item name="android:textSize">12.0sp</item>
+	        </style>
+	        
+	        <style name="BodyText.Large" parent="@style/BodyText.Normal">
+	            <item name="android:textSize">16.0sp</item>
+	        </style>
+	        
+	        <style name="QuoteText.Normal" parent="@android:style/TextAppearance">
+	            <item name="android:textColor">@android:color/darker_gray</item>
+	            <item name="android:textStyle">italic</item>
+	            <item name="android:textSize">12.0sp</item>
+	            <item name="android:paddingTop">2.0dp</item>
+	            <item name="android:paddingLeft">5.0dp</item>
+	        </style>
+	        
+	        <style name="QuoteText.Small" parent="@style/QuoteText.Normal">
+	            <item name="android:textSize">10.0sp</item>
+	        </style>
+	        
+	        <style name="QuoteText.Large" parent="@style/QuoteText.Normal">
+	            <item name="android:textSize">14.0sp</item>
+	        </style>
+	        
+	        <style name="FavItemText.Normal" parent="@android:style/TextAppearance">
+	            <item name="android:typeface">serif</item>
+	            <item name="android:textSize">14.0sp</item>
+	            <item name="android:paddingLeft">2.0dp</item>
+	            <item name="android:paddingTop">5dp</item>
+	            <item name="android:paddingBottom">5dp</item>
+	        </style>
+	        
+	        <style name="FavItemText.Small" parent="@style/FavItemText.Normal">
+	            <item name="android:textSize">12.0sp</item>
+	        </style>
+	        
+	        <style name="FavItemText.Large" parent="@style/FavItemText.Normal">
+	            <item name="android:textSize">16.0sp</item>
+	        </style>
+	        
+    <style name="LinkText.Normal" parent="@style/LinkText">
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="LinkText.small" parent="@style/LinkText">
+        <item name="android:textSize">12sp</item>
+    </style>
     <style name="LinkText.Bold" parent="@style/LinkText">
         <item name="android:textStyle">bold</item>
     </style>
@@ -45,7 +141,7 @@
     </style>
     
     <style name="LinkText.Bold.Big" parent="@style/LinkText.Bold">
-        <item name="android:textSize">18.0sp</item>
+        <item name="android:textSize">16.0sp</item>
     </style>
     <style name="LinkText.Bold.Huge" parent="@style/LinkText.Bold">
         <item name="android:textSize">18.0sp</item>
@@ -53,9 +149,20 @@
     </style>
     <style name="user_name" parent="@style/LinkText.Bold.Big" />
     <style name="user_screen_name" parent="@style/LinkText.Bold.Big" />
+ 
     <style name="normalText" parent="@android:style/TextAppearance">
         <item name="android:textSize">14.0sp</item>
         <item name="android:textColor">#ff444444</item>
+    </style>
+    <style name="normalText.small" parent="@style/normalText">
+        <item name="android:textSize">12.0sp</item> 
+        </style>
+    <style name="normalText.small.hint" parent="@style/normalText.small">
+        <item name="android:textColor">@android:color/darker_gray</item>
+        <item name="android:textStyle">italic</item>
+    </style>    
+    <style name="normalText.tiny">
+        <item name="android:textSize">10.0sp</item>
     </style>
     <style name="normalText.Big" parent="@style/normalText">
         <item name="android:textSize">18.0sp</item>

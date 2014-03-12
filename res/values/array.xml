@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<string-array name="check_intervals">  
-    <item>1</item>  
-    <item>3</item>  
-    <item>7</item>  
-    <item>15</item>
-    <item>30</item>
-</string-array>
 <string-array name="check_update_intervals">  
     <item>1</item>
     <item>10</item>  
@@ -19,6 +12,11 @@
     <item>收件箱</item>
     <item>发件箱</item>
     <item>垃圾箱</item>
+</string-array>
+<string-array name="font_size_ajust_value">
+    <item>Large</item>
+    <item>Normal</item>
+    <item>Small</item>
 </string-array>
 
 <string-array name="hot">

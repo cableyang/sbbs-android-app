@@ -32,6 +32,7 @@ import com.gfan.sbbs.ui.base.BaseViewModel;
 import com.gfan.sbbs.ui.base.HomeViewModel;
 import com.gfan.sbbs.ui.main.R;
 import com.gfan.sbbs.utils.MyListView;
+import com.umeng.analytics.MobclickAgent;
 
 public class FriendListFragment extends SherlockFragment implements
 		BaseViewModel.OnViewModelChangObserver {
@@ -114,6 +115,21 @@ public class FriendListFragment extends SherlockFragment implements
 		}
 	}
 
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		MobclickAgent.onPageEnd("FriendListFragment");
+	}
+
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		MobclickAgent.onPageStart("FriendListFragment");
+	}
+
+
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
@@ -130,7 +146,7 @@ public class FriendListFragment extends SherlockFragment implements
 				processUnLogin();
 			} else {
 				doRetrieve();
-			}
+			}	
 		}
 	}
 
@@ -214,6 +230,7 @@ public class FriendListFragment extends SherlockFragment implements
 
 	private void draw() {
 		myAdapter.refresh(friendList);
+		getSherlockActivity().setTitle(R.string.menu_friends);
 	}
 
 	private void goTop() {

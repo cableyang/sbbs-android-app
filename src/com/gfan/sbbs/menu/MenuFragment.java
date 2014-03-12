@@ -43,6 +43,7 @@ public class MenuFragment extends ListFragment {
 				.setText("当前用户:" + currentUser);
 		headerView.findViewById(R.id.rbm_item_icon).setVisibility(View.GONE);
 		getListView().addHeaderView(headerView);
+		getListView().setBackgroundResource(R.drawable.menu_bg);
 		parseXml(R.menu.ribbon_menu);
 		myAdapter = new MenuItemAdapter(getActivity());
 		mHomeViewModel = MyApplication.mHomeViewModel;

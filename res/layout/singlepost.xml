@@ -30,7 +30,7 @@
 
                 <TextView
                     android:id="@+id/post_text_author"
-                    style="@style/LinkText.Big"
+                    style="@style/AuthorText.Normal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
@@ -38,22 +38,22 @@
 
                 <TextView
                     android:id="@+id/post_text_time"
-                    style="@style/normalText.Big"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
-                    android:textColor="@android:color/darker_gray"
-                    android:text="2012.12.21 00:00:00" />
+                    android:text="2012.12.21 00:00:00"
+                    style="@style/TimeText.Normal"
+                     />
             </RelativeLayout>
 
             <TextView
                 android:id="@+id/PostTitle"
-                style="@style/normalText"
+                style="@style/TitleText.Normal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:paddingTop="1dp"
                 android:text="Post Title"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                />
 
             <View
                 android:id="@+id/SeperatorView"
@@ -65,31 +65,25 @@
                 android:id="@+id/post_text_content"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="2dp"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
                 android:autoLink="all"
                 android:linksClickable="true"
-                style="@style/normalText.Big"
+                style="@style/BodyText.Normal"
                 />
 
             <TextView
                 android:id="@+id/post_text_quoter"
-                style="@style/LinkText"
+                style="@style/QuoteText.Normal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:paddingLeft="2dp"
-                android:textSize="15sp"
                  />
 
             <TextView
                 android:id="@+id/post_text_quote"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="2dp"
-                android:paddingLeft="5dp"
-                android:textColor="@android:color/darker_gray"
-                android:textSize="15sp" />
+                style="@style/QuoteText.Normal"
+                />
 
             <View
                 android:layout_width="fill_parent"
@@ -98,7 +92,7 @@
 
             <TextView
                 android:id="@+id/post_att_label"
-                style="@style/LinkText.Bold.Big"
+                style="@style/AuthorText.Normal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/post_att"

@@ -39,6 +39,7 @@ import com.gfan.sbbs.ui.base.BaseViewModel;
 import com.gfan.sbbs.ui.base.HomeViewModel;
 import com.gfan.sbbs.ui.main.R;
 import com.gfan.sbbs.utils.MyListView;
+import com.umeng.analytics.MobclickAgent;
 
 public class HotFragment extends SherlockFragment implements
 		BaseViewModel.OnViewModelChangObserver, OnNavigationListener {
@@ -114,6 +115,20 @@ public class HotFragment extends SherlockFragment implements
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		return super.onOptionsItemSelected(item);
+	}
+
+	
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		MobclickAgent.onPageEnd("HotFragment");
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		MobclickAgent.onPageStart("HotFragment");
 	}
 
 	@Override

@@ -2,10 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.gfan.sbbs.ui.main"
     android:screenOrientation="landscape"
-    android:versionCode="20140106"
+    android:versionCode="20140312"
     android:versionName="@string/version_name" >
 
-    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="15"/>
+    <uses-sdk
+        android:minSdkVersion="7"
+        android:targetSdkVersion="15" />
     <!-- 下面是申请的权限列表 -->
     <uses-permission android:name="android.permission.INTERNET" >
     </uses-permission>
@@ -41,7 +43,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Activity component-->
+        <!-- Activity component -->
         <activity android:name="com.gfan.sbbs.ui.main.Home" >
         </activity>
         <activity android:name="com.gfan.sbbs.menu.MenuActivity" >
@@ -71,8 +73,7 @@
         </activity>
         <activity android:name="com.gfan.sbbs.ui.main.FullImageView" >
         </activity>
-        <activity android:name="com.gfan.sbbs.ui.main.ImagePagerActivity">
-            
+        <activity android:name="com.gfan.sbbs.ui.main.ImagePagerActivity" >
         </activity>
         <activity
             android:name="com.gfan.sbbs.ui.main.WritePost"
@@ -98,13 +99,19 @@
         <activity
             android:name="com.umeng.fb.ui.FeedbackConversation"
             android:configChanges="keyboard" />
-        <activity 
-            android:name=".FileUploadActivity"
-            ></activity>
+        <activity android:name=".FileUploadActivity" >
+        </activity>
+        <activity
+            android:name="com.umeng.update.UpdateDialogActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+        </activity>
+        <activity android:name="com.umeng.fb.ConversationActivity" />
+        <activity android:name="com.umeng.fb.ContactActivity" />
 
         <!-- service component -->
         <service android:name="com.gfan.sbbs.service.SBBSService" />
-        <service android:name="com.gfan.sbbs.file.service.UpLoadService"></service>
+        <service android:name="com.gfan.sbbs.file.service.UpLoadService" >
+        </service>
         <service
             android:name="com.umeng.common.net.DownloadingService"
             android:exported="true"
@@ -113,7 +120,10 @@
 
         <meta-data
             android:name="UMENG_APPKEY"
-            android:value="4f6d745752701534d900003a" />
+            android:value="" />
+        <meta-data
+            android:name="UMENG_CHANNEL"
+            android:value="Umeng_Channel" />
     </application>
 
 </manifest>

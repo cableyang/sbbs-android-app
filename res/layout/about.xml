@@ -21,7 +21,8 @@
                 style="@style/LinkText.Bold.Big"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
+                android:layout_centerHorizontal="true"
+                android:layout_gravity="center"
                 android:text="@string/version_title" />
 
             <TextView
@@ -29,47 +30,45 @@
                 style="@style/normalText.Big"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:paddingLeft="10dp"
-                android:paddingRight="5dp"
-                android:text="@string/version_name" />
-
-            <View
-                android:id="@+id/devider_one"
-                android:layout_width="fill_parent"
-                android:layout_height="1dp"
                 android:layout_below="@id/version_title"
-                android:background="?android:attr/listDivider" />
-
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
+                android:text="@string/version_name" />
+            
             <TextView
-                android:id="@+id/tips_title"
+                android:id="@+id/sthanks_title"
                 style="@style/LinkText.Bold.Big"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_below="@id/devider_one"
-                android:text="@string/tips_title" />
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
+                android:layout_below="@id/version_name"
+                android:text="@string/special_thanks_title" />
 
             <TextView
-                android:id="@+id/tips"
+                android:id="@+id/sthanks"
                 style="@style/normalText.Big"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_below="@id/tips_title"
-                android:text="@string/tips" />
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
+                android:layout_below="@id/sthanks_title"
+                android:text="@string/special_thanks" />
             <View
                 android:id="@+id/devider_two"
                 android:layout_width="fill_parent"
                 android:layout_height="1dp"
-                android:layout_below="@id/tips"
+                android:layout_below="@id/sthanks"
                 android:background="?android:attr/listDivider" />
+     
             <TextView
                 android:id="@+id/contact_title"
                 style="@style/LinkText.Bold.Big"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
+                android:typeface="monospace"
+                android:gravity="center"
                 android:layout_below="@id/devider_two"
                 android:text="@string/contact_title" />
 
@@ -81,21 +80,24 @@
                 android:layout_alignParentLeft="true"
                 android:layout_below="@id/contact_title"
                 android:autoLink="all"
+                android:gravity="center"
                 android:text="@string/contact" />
 
-                        <View
+            <View
                 android:id="@+id/devider_three"
                 android:layout_width="fill_parent"
                 android:layout_height="1dp"
                 android:layout_below="@id/contact_me"
                 android:background="?android:attr/listDivider" />
+
             <TextView
                 android:id="@+id/about_link_title"
                 style="@style/LinkText.Bold.Big"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
                 android:layout_below="@id/devider_three"
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
                 android:text="@string/links_title" />
 
             <TextView
@@ -106,6 +108,8 @@
                 android:layout_alignParentLeft="true"
                 android:layout_below="@id/about_link_title"
                 android:autoLink="all"
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
                 android:linksClickable="true"
                 android:text="@string/links" />
         </RelativeLayout>

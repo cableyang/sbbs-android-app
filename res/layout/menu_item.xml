@@ -24,6 +24,9 @@
         android:layout_gravity="center_vertical"
         android:paddingLeft="@dimen/rbm_item_text_padding_left"
         android:singleLine="true"
-        android:ellipsize="end"/>
+        android:ellipsize="end"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        />
     
 </LinearLayout>

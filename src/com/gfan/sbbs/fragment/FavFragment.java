@@ -35,6 +35,7 @@ import com.gfan.sbbs.ui.base.HomeViewModel;
 import com.gfan.sbbs.ui.main.R;
 import com.gfan.sbbs.ui.main.TopicList;
 import com.gfan.sbbs.utils.MyListView;
+import com.umeng.analytics.MobclickAgent;
 
 public class FavFragment extends SherlockFragment implements
 		BaseViewModel.OnViewModelChangObserver {
@@ -90,6 +91,22 @@ public class FavFragment extends SherlockFragment implements
 		setRetainInstance(true);
 	}
 
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		MobclickAgent.onPageStart("FavFragment");
+		myAdapter.refresh();
+	}
+	
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		MobclickAgent.onPageEnd("FavFragment");
+	}
+
+
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
@@ -105,7 +122,7 @@ public class FavFragment extends SherlockFragment implements
 						.getCurrentTab())) {
 			getSherlockActivity().getSupportActionBar().setNavigationMode(
 					ActionBar.NAVIGATION_MODE_STANDARD);
-
+			
 			if (isLogined) {
 				Log.i(TAG, "FavFragment do retrieve");
 				doRetrieve();
@@ -244,6 +261,7 @@ public class FavFragment extends SherlockFragment implements
 	private void draw() {
 		myAdapter.refresh(favList);
 		onRoot = true;
+		getSherlockActivity().setTitle(R.string.menu_fav);
 	}
 
 	private void draw(List<Board> list) {

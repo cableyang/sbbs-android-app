@@ -1,5 +1,7 @@
 package com.gfan.sbbs.ui.main;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -17,6 +19,7 @@ public class Preference extends SherlockPreferenceActivity implements
 	private CheckBoxPreference rememberBox, autoLoginBox,isNightBox;
 	private EditTextPreference blackListSettings;
 	private ListPreference mStartPage;
+	private ListPreference mFontAjustPreference;
 //	private MyApplication application;
 
 	@Override
@@ -37,6 +40,7 @@ public class Preference extends SherlockPreferenceActivity implements
 				.findPreference("pref_autologin");
 		isNightBox = (CheckBoxPreference) this.findPreference(Preferences.NIGHT_MODE);
 		
+		mFontAjustPreference = (ListPreference) this.findPreference(Preferences.FONT_SIZE_ADJUST);
 		blackListSettings = (EditTextPreference)this.findPreference(Preferences.BLACKLIST);
 		mStartPage = (ListPreference) this.findPreference(Preferences.SELECT_PAGE);
 		blackListSettings.setOnPreferenceChangeListener(this);
@@ -52,6 +56,12 @@ public class Preference extends SherlockPreferenceActivity implements
 			Object newValue) {
 		if(preference.getKey().equals(Preferences.NIGHT_MODE)){
 			MyApplication.isNightMode = (Boolean) newValue;
+		}
+		if(preference.getKey().equals(Preferences.FONT_SIZE_ADJUST)){
+			SharedPreferences prefs = MyApplication.getInstance().getmPreference();
+			Editor editor = prefs.edit();
+			editor.putString(Preferences.FONT_SIZE_ADJUST, (String)newValue);
+			editor.commit();
 		}
 		return true;
 	}

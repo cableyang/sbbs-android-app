@@ -5,7 +5,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.umeng.analytics.MobclickAgent;
-import com.umeng.fb.UMFeedbackService;
+import com.umeng.fb.FeedbackAgent;
 
 public class About extends com.gfan.sbbs.ui.Abstract.BaseActivity {
 	private Button btn_quit,btn_advice;
@@ -50,8 +50,8 @@ public class About extends com.gfan.sbbs.ui.Abstract.BaseActivity {
 			
 			@Override
 			public void onClick(View v) {
-				UMFeedbackService.setGoBackButtonVisible();
-				UMFeedbackService.openUmengFeedbackSDK(About.this);
+				  FeedbackAgent agent = new FeedbackAgent(About.this);
+				  agent.startFeedbackActivity();
 			}
 		});
 	}

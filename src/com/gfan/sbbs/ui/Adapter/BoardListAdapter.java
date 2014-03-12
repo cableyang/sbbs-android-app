@@ -12,7 +12,9 @@ import android.widget.TextView;
 
 import com.gfan.sbbs.bean.Board;
 import com.gfan.sbbs.othercomponent.MyApplication;
+import com.gfan.sbbs.othercomponent.Preferences;
 import com.gfan.sbbs.ui.main.R;
+import com.gfan.sbbs.ui.utils.ActivityUtils;
 
 public class BoardListAdapter extends BaseAdapter {
 	private List<Board> boardList;
@@ -84,6 +86,14 @@ public class BoardListAdapter extends BaseAdapter {
 				convertView.setBackgroundColor(0xffE4E4E4);
 				// holder.textView.getPaint().setFakeBoldText(false);
 			}
+		}
+		String fontSize = MyApplication.getInstance().getmPreference().getString(Preferences.FONT_SIZE_ADJUST, "Normal");
+		if("Normal".equals(fontSize)){
+			holder.textView.setTextAppearance(MyApplication.getInstance().getActivity(), R.style.FavItemText_Normal);
+		}else if("Large".equals(fontSize)){
+			holder.textView.setTextAppearance(MyApplication.getInstance().getActivity(), R.style.FavItemText_Large);
+		}else{
+			holder.textView.setTextAppearance(MyApplication.getInstance().getActivity(), R.style.FavItemText_Small);
 		}
 		return convertView;
 	}

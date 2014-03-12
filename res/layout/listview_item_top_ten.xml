@@ -13,7 +13,7 @@
         android:layout_alignParentRight="true"
         android:paddingLeft="2dp"
         android:textColor="#a0a0a0"
-        android:textSize="14sp" />
+        android:textSize="10sp" />
 
     <TextView
         android:id="@+id/list_top_ten_textTitle"
@@ -23,7 +23,7 @@
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="4dp"
         android:textColor="#222222"
-        android:textSize="16sp" />
+        android:textSize="12sp" />
 
 
 
@@ -35,7 +35,7 @@
         android:gravity="left"
         android:paddingLeft="4dip"
         android:textColor="#a0a0a0"
-        android:textSize="14sp" >
+        android:textSize="11sp" >
     </TextView>
 
     <TextView
@@ -45,7 +45,7 @@
         android:layout_below="@id/list_top_ten_textTitle"
         android:layout_alignParentRight="true"
         android:textColor="#a0a0a0"
-        android:textSize="14sp" >
+        android:textSize="11sp" >
     </TextView>
 
 </RelativeLayout>

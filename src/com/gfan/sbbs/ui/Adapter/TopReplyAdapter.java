@@ -100,10 +100,12 @@ public class TopReplyAdapter extends BaseAdapter {
 		if (null != topic.getQuoter()) {
 			holder.txt_quoter.setVisibility(View.VISIBLE);
 			holder.txt_quoter.setText("在 " + topic.getQuoter() + " 的大作中提到：");
+			holder.txt_quote.setText(topic.getQuote());
 		} else {
 			holder.txt_quoter.setVisibility(View.GONE);
+			holder.txt_quote.setVisibility(View.GONE);
 		}
-		holder.txt_quote.setText(topic.getQuote());
+		
 		holder.txt_time.setText(topic.getTime());
 //
 //		ImageLoader imageLoader = ImageLoader.getInstance();
@@ -151,6 +153,8 @@ public class TopReplyAdapter extends BaseAdapter {
 					
 				}
 			});
+		}else{
+			holder.myGridView.setVisibility(View.INVISIBLE);
 		}
 		return convertView;
 	}

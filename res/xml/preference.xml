@@ -51,6 +51,15 @@
     <PreferenceCategory
         android:key="pref_topic"
         android:title="@string/pref_topic" >
+        <ListPreference 
+            android:defaultValue="@string/pref_default_font_size"
+            android:dialogTitle="@string/pref_font_size_dialog_title"
+            android:entries="@array/font_size_ajust_value"
+            android:entryValues="@array/font_size_ajust_value"
+            android:key="pref_font_size_ajust"
+            android:summary="@string/pref_font_size_ajust_summary"
+            android:title="@string/pref_font_size_ajust_title"
+            />
         <CheckBoxPreference android:title="@string/pref_night_mode" android:defaultValue="false" android:key="pref_night_mode"/><ListPreference
             android:dialogTitle="@string/pref_select_first_page_title"
             android:entries="@array/page_select"
@@ -90,16 +99,6 @@
             android:key="pref_update_wifi"
             android:summary="@string/pref_update_wifi_summary"
             android:title="@string/pref_update_wifi" />
-
-        <ListPreference
-            android:defaultValue="@string/pref_update_interval_default"
-            android:dependency="pref_auto_update"
-            android:dialogTitle="@string/pref_update_interval"
-            android:entries="@array/check_intervals"
-            android:entryValues="@array/check_intervals"
-            android:key="check_update_interval"
-            android:summary="@string/pref_update_interval_summary"
-            android:title="@string/pref_update_interval" />
     </PreferenceCategory>
 
 </PreferenceScreen>
